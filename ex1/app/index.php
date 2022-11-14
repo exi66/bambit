@@ -105,7 +105,7 @@
     </section>
     <script>
       const user_id = 92;
-      
+
       $(document).ready(function () {
         /* 
         * Лиды
@@ -405,7 +405,7 @@
               fields:
               {
                 'STATUS_ID': 'P',
-                'ORDER_TOPIC': 'Test',
+                'ORDER_TOPIC': 'Test123',
                 'ACCOUNT_NUMBER': 'Test',
                 'DATE_BILL': date2str(current),
                 'DATE_PAY_BEFORE': date2str(nextMonth),
@@ -466,6 +466,7 @@
         const initDate = BX24.getAuth();
         console.log('ititDate: ', initDate);
       }
+      BX24.fitWindow();
 
     </script>
 
