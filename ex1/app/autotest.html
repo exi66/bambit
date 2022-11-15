@@ -51,7 +51,7 @@
       <h3>Счета</h3>
       <button type="button" class="btn btn-primary create-obj">Создать объект</button>
       <div class="d-none mt-2 btn-group info-obj" role="group">
-        <button type="button" path="" class="btn btn-success details-obj">Созданный объект</button>
+        <a target="_blank" href="" class="btn btn-success details-obj">Созданный объект</a>
         <button type="button" class="btn btn-danger delete-obj">Удалить</button>
       </div>
     </div>
@@ -196,7 +196,7 @@
             continue;
           }
           if (key === 'STATUS_ID') {
-            myFields[key] = RANDOM.call('char', { chars: ['P']});
+            myFields[key] = RANDOM.call('char', { chars: ['P'] });
             continue;
           }
           if (key === 'PAY_SYSTEM_ID') {
@@ -256,7 +256,7 @@
         let id = res.data();
         if (id) {
           $(this).parent().find('.delete-obj').attr('lead-target', id);
-          if (obj === 'invoice') $(this).parent().find('.details-obj').attr('path', '/crm/' + obj + '/show/' + id + '/');
+          if (obj === 'invoice') $(this).parent().find('.details-obj').attr('href', 'https://dveri-bambit.bitrix24.ru/crm/' + obj + '/show/' + id + '/');
           else $(this).parent().find('.details-obj').attr('path', '/crm/' + obj + '/details/' + id + '/');
           $(this).parent().find('.info-obj').removeClass('d-none');
         }
@@ -272,7 +272,8 @@
         }
       });
       $('.details-obj').click(function () {
-        BX24.openPath($(this).attr('path'), function (result) { });
+        let path = $(this).attr('path');
+        if (path) BX24.openPath(path, function (result) { });
       });
 
     });
