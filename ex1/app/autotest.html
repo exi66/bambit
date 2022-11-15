@@ -262,6 +262,7 @@
           else $(this).parent().find('.details-obj').attr('path', '/crm/' + obj + '/details/' + id + '/');
           $(this).parent().find('.info-obj').removeClass('d-none');
         }
+        $(this).attr('disabled', true);
       });
       $('.delete-obj').click(async function () {
         const obj = $(this).parent().parent().attr('id');
@@ -270,6 +271,7 @@
           let res = await BX24Client.call('crm.' + obj + '.delete', { id: id });
           console.log(res);
           $(this).parent().addClass('d-none');
+          $(this).parent().parent().find('.create-obj').removeAttr('disabled');
         }
       });
       $('.details-obj').click(function () {
