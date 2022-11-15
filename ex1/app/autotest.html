@@ -14,48 +14,55 @@
 </head>
 
 <body class="container-fluid">
-  <div class="row">
-    <div id="lead" class="col d-grid my-auto">
-      <h3>Лиды</h3>
-      <button type="button" class="btn btn-outline-primary create-obj">Создать объект</button>
-      <div class="d-none mt-2 btn-group info-obj" role="group">
-        <button type="button" path="" class="btn btn-outline-success details-obj">Созданный объект</button>
-        <button type="button" class="btn btn-outline-danger delete-obj">Удалить</button>
+  <div class="row vh-100 p-4">
+    <div class="col-6">
+      <div class="row">
+        <div id="lead" class="col-12 my-2">
+          <h4>Лиды</h4>
+          <button type="button" class="btn btn-outline-primary create-obj">Создать объект</button>
+          <div class="d-none btn-group info-obj" role="group">
+            <button type="button" path="" class="btn btn-outline-success details-obj">Созданный объект</button>
+            <button type="button" class="btn btn-outline-danger delete-obj">Удалить</button>
+          </div>
+        </div>
+        <div id="company" class="col-12 my-2">
+          <h4>Компании</h4>
+          <button type="button" class="btn btn-outline-primary create-obj">Создать объект</button>
+          <div class="d-none btn-group info-obj" role="group">
+            <button type="button" path="" class="btn btn-outline-success details-obj">Созданный объект</button>
+            <button type="button" class="btn btn-outline-danger delete-obj">Удалить</button>
+          </div>
+        </div>
+        <div id="contact" class="col-12 my-2">
+          <h4>Контакты</h4>
+          <button type="button" class="btn btn-outline-primary create-obj">Создать объект</button>
+          <div class="d-none btn-group info-obj" role="group">
+            <button type="button" path="" class="btn btn-outline-success details-obj">Созданный объект</button>
+            <button type="button" class="btn btn-outline-danger delete-obj">Удалить</button>
+          </div>
+        </div>
+        <div id="deal" class="col-12 my-2">
+          <h4>Сделки</h4>
+          <button type="button" class="btn btn-outline-primary create-obj">Создать объект</button>
+          <div class="d-none btn-group info-obj" role="group">
+            <button type="button" path="" class="btn btn-outline-success details-obj">Созданный объект</button>
+            <button type="button" class="btn btn-outline-danger delete-obj">Удалить</button>
+          </div>
+        </div>
+        <div id="invoice" class="col-12 my-2">
+          <h4>Счета</h4>
+          <button type="button" class="btn btn-outline-primary create-obj">Создать объект</button>
+          <div class="d-none btn-group info-obj" role="group">
+            <!--Внимательнее из-за особенности старых счетов здесь ссылка, а не кнопка-->
+            <a target="_blank" href="" class="btn btn-outline-success details-obj">Созданный объект</a>
+            <!-- -->
+            <button type="button" class="btn btn-outline-danger delete-obj">Удалить</button>
+          </div>
+        </div>
       </div>
     </div>
-    <div id="company" class="col d-grid my-auto">
-      <h3>Компании</h3>
-      <button type="button" class="btn btn-outline-primary create-obj">Создать объект</button>
-      <div class="d-none mt-2 btn-group info-obj" role="group">
-        <button type="button" path="" class="btn btn-outline-success details-obj">Созданный объект</button>
-        <button type="button" class="btn btn-outline-danger delete-obj">Удалить</button>
-      </div>
-    </div>
-    <div id="contact" class="col d-grid my-auto">
-      <h3>Контакты</h3>
-      <button type="button" class="btn btn-outline-primary create-obj">Создать объект</button>
-      <div class="d-none mt-2 btn-group info-obj" role="group">
-        <button type="button" path="" class="btn btn-outline-success details-obj">Созданный объект</button>
-        <button type="button" class="btn btn-outline-danger delete-obj">Удалить</button>
-      </div>
-    </div>
-    <div id="deal" class="col d-grid my-auto">
-      <h3>Сделки</h3>
-      <button type="button" class="btn btn-outline-primary create-obj">Создать объект</button>
-      <div class="d-none mt-2 btn-group info-obj" role="group">
-        <button type="button" path="" class="btn btn-outline-success details-obj">Созданный объект</button>
-        <button type="button" class="btn btn-outline-danger delete-obj">Удалить</button>
-      </div>
-    </div>
-    <div id="invoice" class="col d-grid my-auto">
-      <h3>Счета</h3>
-      <button type="button" class="btn btn-outline-primary create-obj">Создать объект</button>
-      <div class="d-none mt-2 btn-group info-obj" role="group">
-        <!--Внимательнее из-за особенности старых счетов здесь ссылка, а не кнопка-->
-        <a target="_blank" href="" class="btn btn-outline-success details-obj">Созданный объект</a>
-        <!-- -->
-        <button type="button" class="btn btn-outline-danger delete-obj">Удалить</button>
-      </div>
+    <div class="col-6">
+      <textarea class="form-control" id="log" style="min-height: 100%; resize: none;" disabled readonly></textarea>
     </div>
   </div>
   <script>
@@ -279,6 +286,30 @@
         if (path) BX24.openPath(path, function (result) { });
       });
 
+      var console = (function(oldCons) {
+        return {
+          log: function (text) {
+            oldCons.log(text);
+            let tmp = $('#log').val();
+            $('#log').val(tmp + '\n' + JSON.stringify(text, null, 2));
+          },
+          info: function (text) {
+            oldCons.info(text);
+            let tmp = $('#log').val();
+            $('#log').val(tmp + '\nInfo: ' + JSON.stringify(text, null, 2));
+          },
+          warn: function (text) {
+            oldCons.warn(text);
+            let tmp = $('#log').val();
+            $('#log').val(tmp + '\nWarn: ' + JSON.stringify(text, null, 2));
+          },
+          error: function (text) {
+            oldCons.error(text);
+            let tmp = $('#log').val();
+            $('#log').val(tmp + '\nError: ' + JSON.stringify(text, null, 2));
+          }
+        };
+      }(window.console));
     });
 
     BX24.init(BX24.getAuth());
