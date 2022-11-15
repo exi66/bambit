@@ -23,6 +23,30 @@
         <button type="button" class="btn btn-danger delete-obj">Удалить</button>
       </div>
     </div>
+    <div id="company" class="col">
+      <h3>Компании</h3>
+      <button type="button" class="btn btn-primary create-obj">Создать объект с рандомными данными</button>
+      <div class="d-none mt-2 info-obj">
+        <button type="button" path="" class="btn btn-success details-obj">Созданный объект</button>
+        <button type="button" class="btn btn-danger delete-obj">Удалить</button>
+      </div>
+    </div>
+    <div id="contact" class="col">
+      <h3>Контакты</h3>
+      <button type="button" class="btn btn-primary create-obj">Создать объект с рандомными данными</button>
+      <div class="d-none mt-2 info-obj">
+        <button type="button" path="" class="btn btn-success details-obj">Созданный объект</button>
+        <button type="button" class="btn btn-danger delete-obj">Удалить</button>
+      </div>
+    </div>
+    <div id="deal" class="col">
+      <h3>Сделки</h3>
+      <button type="button" class="btn btn-primary create-obj">Создать объект с рандомными данными</button>
+      <div class="d-none mt-2 info-obj">
+        <button type="button" path="" class="btn btn-success details-obj">Созданный объект</button>
+        <button type="button" class="btn btn-danger delete-obj">Удалить</button>
+      </div>
+    </div>
   </div>
   <script>
     const MY_ID = 92;
@@ -186,7 +210,7 @@
         const obj = $(this).parent().parent().attr('id');
         if (!['lead', 'company', 'contact', 'deal'].includes(obj)) return console.error('Данный тип объекта не предусмотрен для генерации!');
         const id = $(this).attr('lead-target');
-        if (id && confirm('Вы действительно хотите удалить сделку с ID = ' + id + '?')) {
+        if (id && confirm('Вы действительно хотите удалить объект типа ' + obj + ' с ID = ' + id + '?')) {
           let res = await BX24Client.call('crm.' + obj + '.delete', { id: id });
           console.log(res);
           $(this).parent().addClass('d-none');
