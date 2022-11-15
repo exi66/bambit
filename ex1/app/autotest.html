@@ -265,7 +265,6 @@
       });
       $('.delete-obj').click(async function () {
         const obj = $(this).parent().parent().attr('id');
-        if (!['lead', 'company', 'contact', 'deal', 'invoice'].includes(obj)) return console.error('Данный тип объекта не предусмотрен для генерации!');
         const id = $(this).attr('lead-target');
         if (id && confirm('Вы действительно хотите удалить объект типа ' + obj + ' с ID = ' + id + '?')) {
           let res = await BX24Client.call('crm.' + obj + '.delete', { id: id });
