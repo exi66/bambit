@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="//api.bitrix24.com/api/v1/"></script>
+  <script src="https://code.jquery.com/jquery-3.6.1.min.js"
+    integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
+    integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+  <title>app</title>
+</head>
+
+<body class="container-fluid">
+  <div class="row">
+    <div class="col">
+      <button id="test" type="button" class="btn btn-primary">Создать сделку с рандомными данными</button>
+      <div id="after_create" class="d-none mt-2">
+        <button id="lead_href" type="button" path="" class="btn btn-success">Созданная сделка</button>
+        <button id="delete" type="button" class="btn btn-danger">Удалить</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    const MY_ID = 92;
+
+    const TIMEOUT = 500;
+    const BX24Client = {
+      call: function (method, params) {
+        return new Promise((resolve, reject) => {
+          setTimeout(function () {
+            BX24.callMethod(method, params, (result) => {
+              if (result.error()) {
+                return reject({
+                  error: result.error(),
+                  method: method,
+                  params: params
+                });
+              }
+              resolve(result);
+            });
+          }, TIMEOUT);
+        });
+      },
+      callBatch: function (calls, bHaltOnError = false) {
+        return new Promise((resolve, reject) => {
+          setTimeout(function () {
+            BX24.callBatch(calls, (result) => {
+              resolve(result);
+            }, bHaltOnError);
+          }, TIMEOUT);
+        });
+      },
+      next: function (result) {
+        if (!result.more()) {
+          return null;
+        }
+        return new Promise((resolve, reject) => {
+          setTimeout(function () {
+            result.next((result) => {
+              if (result.error()) {
+                return reject({
+                  error: result.error(),
+                  method: method,
+                  params: params
+                });
+              }
+              resolve(result);
+            });
+          }, TIMEOUT);
+        });
+      }
+    };
+
+    const RANDOM = {
+      default: {
+        len: 5,
+        min: 0,
+        max: 1000,
+        start_date: new Date(1),
+        end_date: new Date(),
+      },
+      call: function (type, settings = {}) {
+        if (type === 'string') return settings.prefix || ''+this.randomString(settings.len || this.default.len);
+        if (type === 'integer' || type === 'double') return this.randomInt(settings.min || this.default.min, settings.max || this.default.max);
+        if (type === 'char') return Math.random() > 0.5 ? 'Y' : 'N';
+        if (type === 'date') return this.randomDate(settings.start_date || this.default.start_date, settings.end_date || this.default.end_date);
+        if (type === 'datetime') return this.date2str(this.randomDate(settings.start_date || this.default.start_date, settings.end_date || this.default.end_date));
+        if (type === 'enumeration' && settings.enum) return this.randomItem(settings.enum);
+        if (type === 'boolean') return Math.round(Math.random());
+        return -1;
+      },
+      randomString: function (length) {
+        let result = '';
+        let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let charactersLength = characters.length;
+        for (let i = 0; i < length; i++) {
+          result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
+      },
+      randomInt: function (min, max) {
+        return Math.floor(Math.random() * (max - min + 1) + min)
+      },
+      randomDate: function (start, end) {
+        return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+      },
+      date2str: function (d) {
+        return d.getFullYear() + '-' + this.paddatepart(1 + d.getMonth()) + '-' + this.paddatepart(d.getDate()) + 'T' + this.paddatepart(d.getHours())
+          + ':' + this.paddatepart(d.getMinutes()) + ':' + this.paddatepart(d.getSeconds()) + '+03:00';
+      },
+      paddatepart: function (part) {
+        return part >= 10 ? part.toString() : '0' + part.toString();
+      },
+      randomItem: function (arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      },
+    }
+
+    $(document).ready(function () {
+      $('#test').click(async function () {
+        let res = await BX24Client.call('crm.lead.fields', {});
+        let fieldsList = res.data();
+        let myFields = {};
+        for (let key in fieldsList) {
+          let field = fieldsList[key];
+
+          if (field.isReadOnly) continue;
+          let rn = RANDOM.call(field.type);
+          if (rn != -1) {
+            myFields[key] = rn;
+            continue;
+          }
+          if (field.type === 'user') {
+            myFields[key] = MY_ID;
+            continue;
+          }
+          if (field.type === 'user') {
+            myFields[key] = MY_ID;
+            continue;
+          }
+          if (field.type === 'enumeration') {
+            myFields[key] = RANDOM.call(field.type, { enum: field.items });
+            continue;
+          }
+          if (field.type === 'crm_multifield') {
+            if (field.title === 'Телефон') {
+              myFields[key] = '+7' + RANDOM.call('integer', { min: 1111111111, max: 9999999999 });
+              continue;
+            }
+            if (field.title === 'E-mail') {
+              myFields[key] = RANDOM.call('string') + '@' + RANDOM.call('string') + '.ru';
+              continue;
+            }
+            myFields[key] = RANDOM.call('string');
+            continue;
+          }
+
+          console.warn('Я не знаю что это за тип данных: ' + field.type);
+          console.log(field);
+        }
+        console.log('Сгенерированный объект:')
+        console.log(myFields);
+        res = await BX24Client.call(
+          'crm.lead.add',
+          {
+            fields: myFields,
+            params: { 'REGISTER_SONET_EVENT': 'N' }
+          }
+        )
+        console.log(res);
+        let id = res.data();
+        if (id) {
+          $('#delete').attr('lead-target', id);
+          $('#lead_href').attr('path', '/crm/lead/details/' + id + '/');
+          $('#after_create').removeClass('d-none');
+        }
+      });
+      $('#delete').click(async function () {
+        const id = $(this).attr('lead-target');
+        if (id && confirm('Вы действительно хотите удалить сделку с ID = ' + id + '?')) {
+          let res = await BX24Client.call('crm.lead.delete', { id: id });
+          console.log(res);
+          $('#after_create').addClass('d-none');
+        }
+      });
+      $('#lead_href').click(function () {
+        BX24.openPath(
+          $(this).attr('path'),
+          function (result) {
+            console.log(result);
+          }
+        );
+      });
+
+    });
+
+    BX24.init(BX24.getAuth());
+    BX24.fitWindow();
+  </script>
+</body>
+
+</html>
