@@ -68,21 +68,14 @@
         let res = await BX24Client.call('tasks.task.list', {
           filter: { TITLE: '123', RESPONSIBLE_LAST_NAME: 18 }, select: ['ID'], order: { CREATED_DATE: 'asc' }
         });
-        let count = 0;
-        while (count < 12500 / 50) {
-          let cmd = [];
+        for (let count = 0; count < 12500 / 50; count++) {
           let tasks = res.data().tasks;
-          for (let task of tasks) {
-            cmd.push({
-              method: 'tasks.task.delete',
-              params: { taskId: task.id },
-            });
-          }
+          let cmd = tasks.map(e => ({ method: 'tasks.task.delete', params: { taskId: e.id } }));
           let local_res = await BX24Client.callBatch(cmd);
           console.log(local_res);
 
           res = await BX24Client.next(res);
-          $('#status').text(`${count++}/${12500 / 50}`);
+          $('#status').text(`${count}/${12500 / 50}`);
         }
       });
     });
