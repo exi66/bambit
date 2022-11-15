@@ -15,11 +15,12 @@
 
 <body class="container-fluid">
   <div class="row">
-    <div class="col">
-      <button id="test" type="button" class="btn btn-primary">Создать сделку с рандомными данными</button>
-      <div id="after_create" class="d-none mt-2">
-        <button id="lead_href" type="button" path="" class="btn btn-success">Созданная сделка</button>
-        <button id="delete" type="button" class="btn btn-danger">Удалить</button>
+    <div id="lead" class="col">
+      <h3>Сделки</h3>
+      <button type="button" class="btn btn-primary create-obj">Создать объект с рандомными данными</button>
+      <div class="d-none mt-2 info-obj">
+        <button type="button" path="" class="btn btn-success details-obj">Созданный объект</button>
+        <button type="button" class="btn btn-danger delete-obj">Удалить</button>
       </div>
     </div>
   </div>
@@ -83,7 +84,7 @@
         end_date: new Date(),
       },
       call: function (type, settings = {}) {
-        if (type === 'string') return settings.prefix || ''+this.randomString(settings.len || this.default.len);
+        if (type === 'string') return settings.prefix || '' + this.randomString(settings.len || this.default.len);
         if (type === 'integer' || type === 'double') return this.randomInt(settings.min || this.default.min, settings.max || this.default.max);
         if (type === 'char') return Math.random() > 0.5 ? 'Y' : 'N';
         if (type === 'date') return this.randomDate(settings.start_date || this.default.start_date, settings.end_date || this.default.end_date);
@@ -120,8 +121,10 @@
     }
 
     $(document).ready(function () {
-      $('#test').click(async function () {
-        let res = await BX24Client.call('crm.lead.fields', {});
+      $('.create-obj').click(async function () {
+        const obj = $(this).parent().attr('id');
+        if (!['lead', 'company', 'contact', 'deal'].includes(obj)) return console.error('Данный тип объекта не предусмотрен для генерации!');
+        let res = await BX24Client.call('crm.' + obj + '.fields', {});
         let fieldsList = res.data();
         let myFields = {};
         for (let key in fieldsList) {
@@ -158,13 +161,14 @@
             continue;
           }
 
-          console.warn('Я не знаю что это за тип данных: ' + field.type);
+          console.warn('Генератор не знает что это за тип данных: ' + field.type);
           console.log(field);
+          if (field.isRequired) return console.error('Обязательное поле не заполнено! Возможно генератор не знает как его заполнить.');
         }
-        console.log('Сгенерированный объект:')
+        console.log('Сгенерированный объект:');
         console.log(myFields);
         res = await BX24Client.call(
-          'crm.lead.add',
+          'crm.' + obj + '.add',
           {
             fields: myFields,
             params: { 'REGISTER_SONET_EVENT': 'N' }
@@ -173,26 +177,23 @@
         console.log(res);
         let id = res.data();
         if (id) {
-          $('#delete').attr('lead-target', id);
-          $('#lead_href').attr('path', '/crm/lead/details/' + id + '/');
-          $('#after_create').removeClass('d-none');
+          $(this).parent().find('.delete-obj').attr('lead-target', id);
+          $(this).parent().find('.details-obj').attr('path', '/crm/lead/details/' + id + '/');
+          $(this).parent().find('.info-obj').removeClass('d-none');
         }
       });
-      $('#delete').click(async function () {
+      $('.delete-obj').click(async function () {
+        const obj = $(this).parent().parent().attr('id');
+        if (!['lead', 'company', 'contact', 'deal'].includes(obj)) return console.error('Данный тип объекта не предусмотрен для генерации!');
         const id = $(this).attr('lead-target');
         if (id && confirm('Вы действительно хотите удалить сделку с ID = ' + id + '?')) {
-          let res = await BX24Client.call('crm.lead.delete', { id: id });
+          let res = await BX24Client.call('crm.' + obj + '.delete', { id: id });
           console.log(res);
-          $('#after_create').addClass('d-none');
+          $(this).parent().addClass('d-none');
         }
       });
-      $('#lead_href').click(function () {
-        BX24.openPath(
-          $(this).attr('path'),
-          function (result) {
-            console.log(result);
-          }
-        );
+      $('.details-obj').click(function () {
+        BX24.openPath($(this).attr('path'), function(result) {});
       });
 
     });
