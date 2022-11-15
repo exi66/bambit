@@ -178,7 +178,7 @@
         let id = res.data();
         if (id) {
           $(this).parent().find('.delete-obj').attr('lead-target', id);
-          $(this).parent().find('.details-obj').attr('path', '/crm/lead/details/' + id + '/');
+          $(this).parent().find('.details-obj').attr('path', '/crm/' + obj + '/details/' + id + '/');
           $(this).parent().find('.info-obj').removeClass('d-none');
         }
       });
@@ -193,7 +193,7 @@
         }
       });
       $('.details-obj').click(function () {
-        BX24.openPath($(this).attr('path'), function(result) {});
+        BX24.openPath($(this).attr('path'), function (result) { });
       });
 
     });
