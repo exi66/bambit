@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="//api.bitrix24.com/api/v1/"></script>
+  <script src="https://code.jquery.com/jquery-3.6.1.min.js"
+    integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+  <title>app</title>
+</head>
+
+<body>
+  <button id="test">test</button>
+  <span id="status"></span>
+  <script>
+    const TIMEOUT = 500;
+    const BX24Client = {
+      call: function (method, params) {
+        return new Promise((resolve, reject) => {
+          setTimeout(function () {
+            BX24.callMethod(method, params, (result) => {
+              if (result.error()) {
+                return reject({
+                  error: result.error(),
+                  method: method,
+                  params: params
+                });
+              }
+              resolve(result);
+            });
+          }, TIMEOUT);
+        });
+      },
+      callBatch: function (calls, bHaltOnError = false) {
+        return new Promise((resolve, reject) => {
+          setTimeout(function () {
+            BX24.callBatch(calls, (result) => {
+              resolve(result);
+            }, bHaltOnError);
+          }, TIMEOUT);
+        });
+      },
+      next: function (result) {
+        if (!result.more()) {
+          return null;
+        }
+        return new Promise((resolve, reject) => {
+          setTimeout(function () {
+            result.next((result) => {
+              if (result.error()) {
+                return reject({
+                  error: result.error(),
+                  method: method,
+                  params: params
+                });
+              }
+              resolve(result);
+            });
+          }, TIMEOUT);
+        });
+      }
+    };
+
+    $(document).ready(function () {
+      $('#test').click(async function () {
+        let res = await BX24Client.call('tasks.task.list', {
+          filter: { TITLE: '123', RESPONSIBLE_LAST_NAME: 18 }, select: ['ID'], order: { CREATED_DATE: 'asc' }
+        });
+        let count = 0;
+        while (count < 12500 / 50) {
+          let cmd = [];
+          let tasks = res.data().tasks;
+          for (let task of tasks) {
+            cmd.push({
+              method: 'tasks.task.delete',
+              params: { taskId: task.id },
+            });
+          }
+          let local_res = await BX24Client.callBatch(cmd);
+          console.log(local_res);
+
+          res = await BX24Client.next(res);
+          $('#status').text(`${count++}/${12500 / 50}`);
+        }
+      });
+    });
+
+    BX24.init(BX24.getAuth());
+    BX24.fitWindow();
+  </script>
+</body>
+
+</html>
