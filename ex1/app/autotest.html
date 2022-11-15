@@ -15,34 +15,42 @@
 
 <body class="container-fluid">
   <div class="row">
-    <div id="lead" class="col">
-      <h3>Сделки</h3>
-      <button type="button" class="btn btn-primary create-obj">Создать объект с рандомными данными</button>
-      <div class="d-none mt-2 info-obj">
+    <div id="lead" class="col d-grid my-auto">
+      <h3>Лиды</h3>
+      <button type="button" class="btn btn-primary create-obj">Создать объект</button>
+      <div class="d-none mt-2 btn-group info-obj" role="group">
         <button type="button" path="" class="btn btn-success details-obj">Созданный объект</button>
         <button type="button" class="btn btn-danger delete-obj">Удалить</button>
       </div>
     </div>
-    <div id="company" class="col">
+    <div id="company" class="col d-grid my-auto">
       <h3>Компании</h3>
-      <button type="button" class="btn btn-primary create-obj">Создать объект с рандомными данными</button>
-      <div class="d-none mt-2 info-obj">
+      <button type="button" class="btn btn-primary create-obj">Создать объект</button>
+      <div class="d-none mt-2 btn-group info-obj" role="group">
         <button type="button" path="" class="btn btn-success details-obj">Созданный объект</button>
         <button type="button" class="btn btn-danger delete-obj">Удалить</button>
       </div>
     </div>
-    <div id="contact" class="col">
+    <div id="contact" class="col d-grid my-auto">
       <h3>Контакты</h3>
-      <button type="button" class="btn btn-primary create-obj">Создать объект с рандомными данными</button>
-      <div class="d-none mt-2 info-obj">
+      <button type="button" class="btn btn-primary create-obj">Создать объект</button>
+      <div class="d-none mt-2 btn-group info-obj" role="group">
         <button type="button" path="" class="btn btn-success details-obj">Созданный объект</button>
         <button type="button" class="btn btn-danger delete-obj">Удалить</button>
       </div>
     </div>
-    <div id="deal" class="col">
+    <div id="deal" class="col d-grid my-auto">
       <h3>Сделки</h3>
-      <button type="button" class="btn btn-primary create-obj">Создать объект с рандомными данными</button>
-      <div class="d-none mt-2 info-obj">
+      <button type="button" class="btn btn-primary create-obj">Создать объект</button>
+      <div class="d-none mt-2 btn-group info-obj" role="group">
+        <button type="button" path="" class="btn btn-success details-obj">Созданный объект</button>
+        <button type="button" class="btn btn-danger delete-obj">Удалить</button>
+      </div>
+    </div>
+    <div id="invoice" class="col d-grid my-auto">
+      <h3>Счета</h3>
+      <button type="button" class="btn btn-primary create-obj">Создать объект</button>
+      <div class="d-none mt-2 btn-group info-obj" role="group">
         <button type="button" path="" class="btn btn-success details-obj">Созданный объект</button>
         <button type="button" class="btn btn-danger delete-obj">Удалить</button>
       </div>
@@ -102,15 +110,18 @@
     const RANDOM = {
       default: {
         len: 5,
+        text_len: 32,
         min: 0,
         max: 1000,
         start_date: new Date(1),
         end_date: new Date(),
+        chars: ['Y', 'N'],
       },
       call: function (type, settings = {}) {
         if (type === 'string') return settings.prefix || '' + this.randomString(settings.len || this.default.len);
+        if (type === 'text') return this.randomString(settings.len || this.default.text_len);
         if (type === 'integer' || type === 'double') return this.randomInt(settings.min || this.default.min, settings.max || this.default.max);
-        if (type === 'char') return Math.random() > 0.5 ? 'Y' : 'N';
+        if (type === 'char') return this.randomItem(settings.chars || this.default.chars);
         if (type === 'date') return this.randomDate(settings.start_date || this.default.start_date, settings.end_date || this.default.end_date);
         if (type === 'datetime') return this.date2str(this.randomDate(settings.start_date || this.default.start_date, settings.end_date || this.default.end_date));
         if (type === 'enumeration' && settings.enum) return this.randomItem(settings.enum);
@@ -147,7 +158,7 @@
     $(document).ready(function () {
       $('.create-obj').click(async function () {
         const obj = $(this).parent().attr('id');
-        if (!['lead', 'company', 'contact', 'deal'].includes(obj)) return console.error('Данный тип объекта не предусмотрен для генерации!');
+        if (!['lead', 'company', 'contact', 'deal', 'invoice'].includes(obj)) return console.error('Данный тип объекта не предусмотрен для генерации!');
         let res = await BX24Client.call('crm.' + obj + '.fields', {});
         let fieldsList = res.data();
         let myFields = {};
@@ -156,7 +167,7 @@
 
           if (field.isReadOnly) continue;
           let rn = RANDOM.call(field.type);
-          if (rn != -1) {
+          if (rn != -1 && key !== 'STATUS_ID' && key !== 'PAY_SYSTEM_ID' && key !== 'IS_RECURRING') {
             myFields[key] = rn;
             continue;
           }
@@ -184,8 +195,51 @@
             myFields[key] = RANDOM.call('string');
             continue;
           }
+          if (key === 'STATUS_ID') {
+            myFields[key] = RANDOM.call('char', { chars: ['P']});
+            continue;
+          }
+          if (key === 'PAY_SYSTEM_ID') {
+            myFields[key] = 6;
+            continue;
+          }
+          if (field.type === 'aarray' && key === 'INVOICE_PROPERTIES') {
+            let array = Math.random() > 0.5 ?
+              {
+                'COMPANY': RANDOM.call('string'),
+                'COMPANY_ADR': RANDOM.call('string'),
+                'CONTACT_PERSON': RANDOM.call('string'),
+                'EMAIL ': RANDOM.call('string') + '@' + RANDOM.call('string') + '.ru',
+                'PHONE ': '+7' + RANDOM.call('integer', { min: 1111111111, max: 9999999999 }),
+                'INN': '' + RANDOM.call('integer', { min: 1111111111, max: 9999999999 }),
+                'KPP': '' + RANDOM.call('integer', { min: 111111111, max: 999999999 }),
+              } : {
+                'FIO': RANDOM.call('string'),
+                'ADDRESS': RANDOM.call('string'),
+                'EMAIL ': RANDOM.call('string') + '@' + RANDOM.call('string') + '.ru',
+                'PHONE ': '+7' + RANDOM.call('integer', { min: 1111111111, max: 9999999999 }),
+              };
+            myFields[key] = array;
+            continue;
+          }
+          if (field.type === 'iarray' && key === 'PRODUCT_ROWS') {
+            let count = RANDOM.call('integer', { min: 1, max: 5 }), array = [];
+            for (let i = 0; i < count; i++) {
+              array.push({
+                'ID': 0,
+                'PRICE': RANDOM.call('double'),
+                'DISCOUNT_PRICE': Math.random(),
+                'PRODUCT_ID ': 0,
+                'VAT_RATE': 0.2,
+                'VAT_INCLUDED': RANDOM.call('char'),
+                'QUANTITY': RANDOM.call('integer'),
+              });
+            }
+            myFields[key] = array;
+            continue;
+          }
 
-          console.warn('Генератор не знает что это за тип данных: ' + field.type);
+          console.warn('Генератор не знает что это за тип данных: ' + key);
           console.log(field);
           if (field.isRequired) return console.error('Обязательное поле не заполнено! Возможно генератор не знает как его заполнить.');
         }
@@ -202,13 +256,14 @@
         let id = res.data();
         if (id) {
           $(this).parent().find('.delete-obj').attr('lead-target', id);
-          $(this).parent().find('.details-obj').attr('path', '/crm/' + obj + '/details/' + id + '/');
+          if (obj === 'invoice') $(this).parent().find('.details-obj').attr('path', '/crm/' + obj + '/show/' + id + '/');
+          else $(this).parent().find('.details-obj').attr('path', '/crm/' + obj + '/details/' + id + '/');
           $(this).parent().find('.info-obj').removeClass('d-none');
         }
       });
       $('.delete-obj').click(async function () {
         const obj = $(this).parent().parent().attr('id');
-        if (!['lead', 'company', 'contact', 'deal'].includes(obj)) return console.error('Данный тип объекта не предусмотрен для генерации!');
+        if (!['lead', 'company', 'contact', 'deal', 'invoice'].includes(obj)) return console.error('Данный тип объекта не предусмотрен для генерации!');
         const id = $(this).attr('lead-target');
         if (id && confirm('Вы действительно хотите удалить объект типа ' + obj + ' с ID = ' + id + '?')) {
           let res = await BX24Client.call('crm.' + obj + '.delete', { id: id });
