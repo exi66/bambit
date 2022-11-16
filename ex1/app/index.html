@@ -166,7 +166,7 @@
           const id = $('#leads .delete-id').val();
           if (!id) return console.error('Input must be not empty!');
           BX24.callMethod(
-            "crm.lead.delete",
+            'crm.lead.delete',
             { id: id },
             function (result) {
               if (result.error())
@@ -231,7 +231,7 @@
           const id = $('#company .delete-id').val();
           if (!id) return console.error('Input must be not empty!');
           BX24.callMethod(
-            "crm.company.delete",
+            'crm.company.delete',
             { id: id },
             function (result) {
               if (result.error())
@@ -298,7 +298,7 @@
           const id = $('#contact .delete-id').val();
           if (!id) return console.error('Input must be not empty!');
           BX24.callMethod(
-            "crm.contact.delete",
+            'crm.contact.delete',
             { id: id },
             function (result) {
               if (result.error())
@@ -363,7 +363,7 @@
           const id = $('#deal .delete-id').val();
           if (!id) return console.error('Input must be not empty!');
           BX24.callMethod(
-            "crm.deal.delete",
+            'crm.deal.delete',
             { id: id },
             function (result) {
               if (result.error())
@@ -449,7 +449,7 @@
           const id = $('#invoice .delete-id').val();
           if (!id) return console.error('Input must be not empty!');
           BX24.callMethod(
-            "crm.invoice.delete",
+            'crm.invoice.delete',
             { id: id },
             function (result) {
               if (result.error())

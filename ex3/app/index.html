@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="//api.bitrix24.com/api/v1/"></script>
+  <script src="https://code.jquery.com/jquery-3.6.1.min.js"
+    integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/air-datepicker@3.3.1/air-datepicker.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/air-datepicker@3.3.1/air-datepicker.css">
+  <title>app</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+    }
+
+    * {
+      font-family: Arial, Helvetica, sans-serif !important;
+    }
+
+    .wrapper {
+      margin-top: .5rem;
+      margin-bottom: .5rem;
+      width: 100%;
+    }
+
+    .table-wrapper table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    table,
+    th,
+    td {
+      border: 1px solid;
+    }
+
+    th,
+    td {
+      padding-left: .25rem;
+      padding-right: .25rem;
+    }
+
+    .text-centered {
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>Таблица отчетности по Лидам за период</h1>
+    <div class="wrapper form-wrapper">
+      <h2>Дата создания лида</h2>
+      <form id="search">
+        <label>
+          От
+          <input type="text" name="start" required>
+        </label>
+        <label>
+          До
+          <input type="text" name="end" required>
+        </label>
+        <button type="submit">Найти</button>
+      </form>
+    </div>
+    <div class="wrapper info-wrapper">
+      Найдено лидов: <span id="info_block">0</span> шт
+    </div>
+    <div class="wrapper table-wrapper">
+      <table id="report">
+        <thead>
+          <tr>
+            <th>Ответственный</th>
+            <th>Название</th>
+            <th>#</th>
+            <th>Cтатус</th>
+            <th>Источник</th>
+            <th>Дата создания</th>
+            <th>Дата изменения</th>
+            <th>Дата закрытия</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Пользователь</td>
+            <td>Задача</td>
+            <td class="text-centered">0</td>
+            <td>завершена</td>
+            <td>Звонок</td>
+            <td>01.01.2022</td>
+            <td>01.01.2022</td>
+            <td>01.01.2022</td>
+          </tr>
+        </tbody>
+        <tfoot>
+        </tfoot>
+      </table>
+    </div>
+  </main>
+  <script>
+    const TIMEOUT = 500;
+    const BX24Client = {
+      call: function (method, params) {
+        return new Promise((resolve, reject) => {
+          setTimeout(function () {
+            BX24.callMethod(method, params, (result) => {
+              if (result.error()) {
+                return reject({
+                  error: result.error(),
+                  method: method,
+                  params: params
+                });
+              }
+              resolve(result);
+            });
+          }, TIMEOUT);
+        });
+      },
+      callBatch: function (calls, bHaltOnError = false) {
+        return new Promise((resolve, reject) => {
+          setTimeout(function () {
+            BX24.callBatch(calls, (result) => {
+              resolve(result);
+            }, bHaltOnError);
+          }, TIMEOUT);
+        });
+      },
+      next: function (result) {
+        if (!result.more()) {
+          return null;
+        }
+        return new Promise((resolve, reject) => {
+          setTimeout(function () {
+            result.next((result) => {
+              if (result.error()) {
+                return reject({
+                  error: result.error(),
+                  method: method,
+                  params: params
+                });
+              }
+              resolve(result);
+            });
+          }, TIMEOUT);
+        });
+      }
+    };
+    function date2str(d) {
+      return d.getFullYear() + '-' + this.paddatepart(1 + d.getMonth()) + '-' + this.paddatepart(d.getDate()) + 'T' + this.paddatepart(d.getHours())
+        + ':' + this.paddatepart(d.getMinutes()) + ':' + this.paddatepart(d.getSeconds()) + '+03:00';
+    }
+    function paddatepart(part) {
+      return part >= 10 ? part.toString() : '0' + part.toString();
+    }
+    function dateInMoscow() {
+      return new Date(
+        new Date().toLocaleString('en-US', { timeZone: 'Europe/Moscow' })
+      );
+    }
+
+    $(document).ready(async function () {
+
+      let status_res = await BX24Client.callBatch([
+        {
+          method: 'crm.status.list', params: {
+            order: { 'SORT': 'ASC' },
+            filter: { 'ENTITY_ID': 'STATUS' }
+          }
+        },
+        {
+          method: 'crm.status.list', params: {
+            order: { 'SORT': 'ASC' },
+            filter: { 'ENTITY_ID': 'SOURCE' }
+          }          
+        }
+      ]);
+      const status_list = status_res[0].data();
+      const source_list = status_res[1].data();
+
+
+      new AirDatepicker('#search input[name="start"]', {
+        minDate: new Date(1),
+        maxDate: dateInMoscow(),
+        multipleDates: false,
+        selectedDates: [new Date(dateInMoscow().getFullYear(), dateInMoscow().getMonth(), 1)],
+        dateFormat(date) {
+          return date2str(date);
+        },
+      });
+      new AirDatepicker('#search input[name="end"]', {
+        minDate: new Date(1),
+        maxDate: dateInMoscow(),
+        multipleDates: false,
+        selectedDates: [dateInMoscow()],
+        dateFormat(date) {
+          return date2str(date);
+        },
+      });
+      $('#search').on('submit', async function (e) {
+        e.preventDefault();
+        let start = $(this).serializeArray().find(e => e.name === 'start'),
+          end = $(this).serializeArray().find(e => e.name === 'end');
+
+        //validate
+        if (Date.parse(start) === NaN || Date.parse(end) === NaN) return alert('Input must be a date!');
+        if (new Date(start).getTime() > new Date(end).getTime()) return alert('Start date must be <= end date!');
+
+        let res = await BX24Client.call(
+          'crm.lead.list',
+          {
+            order: { 'ID': 'ASC' },
+            filter: { '>DATE_CREATE': start, '<DATE_CREATE': end },
+            select: ['ASSIGNED_BY_ID', 'TITLE', 'ID', 'STATUS_ID', 'SOURCE_ID', 'DATE_CREATE', 'DATE_MODIFY', 'DATE_CLOSED']
+          }
+        );
+        $('#info_block').text(res.total());
+        console.log(res.data());
+        let users_cmd = res.data().map(e => ({ method: 'user.get', params: { 'ID': e['ASSIGNED_BY_ID'] } }));
+        let users_res = await BX24Client.callBatch(users_cmd);
+      });
+    });
+
+    BX24.init(BX24.getAuth());
+    BX24.fitWindow();
+  </script>
+</body>
+
+</html>
