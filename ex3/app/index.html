@@ -67,22 +67,45 @@
     .open-path:hover {
       color: #008dc5;
     }
+
+    #loader {
+      position: fixed;
+      left: 0px;
+      top: 0px;
+      width: 100%;
+      height: 100%;
+      z-index: 9999;
+      background-image: url("data:image/svg+xml,%3Csvg version='1.1' id='L6' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px' viewBox='0 0 100 100' enable-background='new 0 0 100 100' xml:space='preserve'%3E%3Crect fill='none' stroke='black' stroke-width='5' x='25' y='25' width='50' height='50'%3E%3CanimateTransform attributeName='transform' dur='0.5s' from='0 50 50' to='180 50 50' type='rotate' id='strokeBox' attributeType='XML' begin='rectBox.end'/%3E%3C/rect%3E%3Crect x='27' y='27' fill='black' width='46' height='50'%3E%3Canimate attributeName='height' dur='1.3s' attributeType='XML' from='50' to='0' id='rectBox' fill='freeze' begin='0s;strokeBox.end'/%3E%3C/rect%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-size: 5rem;
+      background-position: center;
+      background-color: white;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .sort-table {
+      cursor: pointer;
+    }
   </style>
 </head>
 
 <body>
   <main>
+    <div id="loader" class="hidden"></div>
     <h1>Таблица отчетности по Лидам за период</h1>
     <div class="wrapper form-wrapper">
       <h2>Дата создания лида</h2>
-      <form id="search">
+      <form autocomplete="off" id="search">
         <label>
           От
-          <input type="text" name="start" required>
+          <input class="data-picker" autocomplete="false" type="text" name="start" required>
         </label>
         <label>
           До
-          <input type="text" name="end" required>
+          <input class="data-picker" autocomplete="false" type="text" name="end" required>
         </label>
         <button type="submit">Найти</button>
       </form>
@@ -94,14 +117,30 @@
       <table id="report">
         <thead>
           <tr>
-            <th>Ответственный</th>
-            <th>Название</th>
-            <th>#</th>
-            <th>Cтатус</th>
-            <th>Источник</th>
-            <th>Дата создания</th>
-            <th>Дата изменения</th>
-            <th>Дата закрытия</th>
+            <th>
+              <div class="sort-table" sort-target="user.name" sort-type="string">Ответственный</div>
+            </th>
+            <th>
+              <div class="sort-table" sort-target="lead.title" sort-type="string">Название</div>
+            </th>
+            <th>
+              <div class="sort-table" sort-target="lead.id" sort-type="integer">#</div>
+            </th>
+            <th>
+              <div class="sort-table" sort-target="lead.status" sort-type="string">Cтатус</div>
+            </th>
+            <th>
+              <div class="sort-table" sort-target="lead.source" sort-type="string">Источник</div>
+            </th>
+            <th>
+              <div class="sort-table" sort-target="lead.date_create" sort-type="date">Дата создания</div>
+            </th>
+            <th>
+              <div class="sort-table" sort-target="lead.date_modify" sort-type="date">Дата изменения</div>
+            </th>
+            <th>
+              <div class="sort-table" sort-target="lead.date_close" sort-type="date">Дата закрытия</div>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -120,8 +159,13 @@
         </tfoot>
       </table>
     </div>
+    <div class="wrapper pagination-wrapper hidden">
+      <button id="next_page">Следующая</button>
+    </div>
   </main>
   <script>
+    let res;
+    let table_obj;
     const TIMEOUT = 500;
     const BX24Client = {
       call: function (method, params) {
@@ -170,8 +214,7 @@
       }
     };
     function date2str(d) {
-      return d.getFullYear() + '-' + this.paddatepart(1 + d.getMonth()) + '-' + this.paddatepart(d.getDate()) + 'T' + this.paddatepart(d.getHours())
-        + ':' + this.paddatepart(d.getMinutes()) + ':' + this.paddatepart(d.getSeconds()) + '+03:00';
+      return d.getFullYear() + '-' + this.paddatepart(1 + d.getMonth()) + '-' + this.paddatepart(d.getDate());
     }
     function paddatepart(part) {
       return part >= 10 ? part.toString() : '0' + part.toString();
@@ -184,7 +227,132 @@
 
     $(document).ready(async function () {
 
-      let status_res = await BX24Client.callBatch([
+      const updateInfoBlock = async function () {
+        let start = $('#search').serializeArray().find(e => e.name === 'start'),
+          end = $('#search').serializeArray().find(e => e.name === 'end');
+
+        //validate
+        if (isNaN(Date.parse(start.value)) || isNaN(Date.parse(end.value))) return;
+        if (new Date(start.value).getTime() > new Date(end.value).getTime()) return;
+
+        let local_res = await BX24Client.call(
+          'crm.lead.list',
+          {
+            order: { 'ID': 'ASC' },
+            filter: { '>DATE_CREATE': start.value + 'T00:00:00', '<DATE_CREATE': end.value + 'T23:59:59' },
+            select: ['ID'],
+          }
+        );
+
+        $('#info_block').text(local_res.total());
+      }
+
+      new AirDatepicker('#search input[name="start"]', {
+        minDate: new Date(1),
+        maxDate: dateInMoscow(),
+        multipleDates: false,
+        selectedDates: [new Date(dateInMoscow().getFullYear(), dateInMoscow().getMonth(), 1)],
+        dateFormat(date) {
+          return date2str(date);
+        },
+        onSelect({ date }) {
+          updateInfoBlock();
+        }
+      });
+
+      new AirDatepicker('#search input[name="end"]', {
+        minDate: new Date(1),
+        maxDate: dateInMoscow(),
+        multipleDates: false,
+        selectedDates: [dateInMoscow()],
+        dateFormat(date) {
+          return date2str(date);
+        },
+        onSelect({ date }) {
+          updateInfoBlock();
+        }
+      });
+
+
+      $('#search').on('submit', async function (e) {
+        e.preventDefault();
+        let start = $(this).serializeArray().find(e => e.name === 'start'),
+          end = $(this).serializeArray().find(e => e.name === 'end');
+
+        //validate
+        if (isNaN(Date.parse(start.value)) || isNaN(Date.parse(end.value))) return alert('Input must be a date!');
+        if (new Date(start.value).getTime() > new Date(end.value).getTime()) return alert('Start date must be <= end date!');
+
+        toggleLoader();
+        res = await BX24Client.call(
+          'crm.lead.list',
+          {
+            order: { 'ID': 'ASC' },
+            filter: { '>DATE_CREATE': start.value + 'T00:00:00', '<DATE_CREATE': end.value + 'T23:59:59' },
+            select: ['ASSIGNED_BY_ID', 'TITLE', 'ID', 'STATUS_ID', 'SOURCE_ID', 'DATE_CREATE', 'DATE_MODIFY', 'DATE_CLOSED'],
+          }
+        );
+        table_obj = await getData();
+        if (res.more()) {
+          $('#next_page').parent().removeClass('hidden');
+        }
+        updateTable(table_obj);
+        toggleLoader();
+        BX24.fitWindow();
+      });
+
+      $('#next_page').click(async function () {
+        toggleLoader();
+
+        res = await BX24Client.next(res);
+        table_obj = await getData();
+        if (!res.more()) {
+          $(this).parent().addClass('hidden');
+        }
+        updateTable(table_obj);
+        toggleLoader();
+        BX24.fitWindow();
+      });
+
+      $('.sort-table').click(function () {
+        if (!(table_obj instanceof Array)) return;
+        let reverse = $(this).hasClass('active'),
+          keys = $(this).attr('sort-target').split('.'),
+          sort_type = $(this).attr('sort-type');
+        let compare = reverse ? function (a, b) {
+          if (sort_type === 'string') {
+            return b[keys[0]][keys[1]].localeCompare(a[keys[0]][keys[1]]);
+          }
+          if (sort_type === 'integer') {
+            return b[keys[0]][keys[1]] - a[keys[0]][keys[1]];
+          }
+          if (sort_type === 'date') {
+            return new Date(b[keys[0]][keys[1]]).getTime() - new Date(a[keys[0]][keys[1]]).getTime();
+          }
+        } : function (a, b) {
+          if (sort_type === 'string') {
+            return a[keys[0]][keys[1]].localeCompare(b[keys[0]][keys[1]]);
+          }
+          if (sort_type === 'integer') {
+            return a[keys[0]][keys[1]] - b[keys[0]][keys[1]];
+          }
+          if (sort_type === 'date') {
+            return new Date(a[keys[0]][keys[1]]).getTime() - new Date(b[keys[0]][keys[1]]).getTime();
+          }
+        };
+        $('.sort-table').removeClass('active');
+        if (!reverse) $(this).addClass('active');
+        table_obj.sort(compare);
+        updateTable(table_obj);
+        BX24.fitWindow();
+      })
+
+      /*
+      * Работа с dom деревом закончена
+      * Ниже непосредственный функционал
+      */
+
+      const status_res = await BX24Client.callBatch([
         {
           method: 'crm.status.list', params: {
             order: { 'SORT': 'ASC' },
@@ -198,68 +366,37 @@
           }
         }
       ]);
-      const status_list = status_res[0].data();
-      const source_list = status_res[1].data();
-
-      const getStatus = function(id) {
+      const getStatus = function (id) {
+        status_list = status_res[0].data();
         let f = status_list.find(e => e.STATUS_ID == id);
         if (f) return f.NAME;
       }
-      const getSource = function(id) {
+      const getSource = function (id) {
+        const source_list = status_res[1].data();
         let f = source_list.find(e => e.STATUS_ID == id);
         if (f) return f.NAME;
       }
-
-      const createListeners = function() {
+      const createListeners = function () {
         $('.open-path').click(function () {
           let path = $(this).attr('path');
           if (path) BX24.openPath(path, function (result) { });
         });
       }
-
-      new AirDatepicker('#search input[name="start"]', {
-        minDate: new Date(1),
-        maxDate: dateInMoscow(),
-        multipleDates: false,
-        selectedDates: [new Date(dateInMoscow().getFullYear(), dateInMoscow().getMonth(), 1)],
-        dateFormat(date) {
-          return date2str(date);
-        },
-      });
-      new AirDatepicker('#search input[name="end"]', {
-        minDate: new Date(1),
-        maxDate: dateInMoscow(),
-        multipleDates: false,
-        selectedDates: [dateInMoscow()],
-        dateFormat(date) {
-          return date2str(date);
-        },
-      });
-      $('#search').on('submit', async function (e) {
-        e.preventDefault();
-        let start = $(this).serializeArray().find(e => e.name === 'start'),
-          end = $(this).serializeArray().find(e => e.name === 'end');
-
-        //validate
-        if (Date.parse(start) === NaN || Date.parse(end) === NaN) return alert('Input must be a date!');
-        if (new Date(start).getTime() > new Date(end).getTime()) return alert('Start date must be <= end date!');
-
-        let res = await BX24Client.call(
-          'crm.lead.list',
-          {
-            order: { 'ID': 'ASC' },
-            filter: { '>DATE_CREATE': start, '<DATE_CREATE': end },
-            select: ['ASSIGNED_BY_ID', 'TITLE', 'ID', 'STATUS_ID', 'SOURCE_ID', 'DATE_CREATE', 'DATE_MODIFY', 'DATE_CLOSED']
-          }
-        );
-        $('#info_block').text(res.total());
+      const getData = async function () {
         let leads_data = res.data();
         let users_cmd = leads_data.map(e => ({ method: 'user.get', params: { 'ID': e.ASSIGNED_BY_ID } }));
         let users_res = await BX24Client.callBatch(users_cmd);
         let table = serializeRes(res, users_res);
-        updateTable(table);
-      });
-
+        if (res.more()) {
+          res = await BX24Client.next(res);
+          let local_leads_data = res.data();
+          let local_users_cmd = leads_data.map(e => ({ method: 'user.get', params: { 'ID': e.ASSIGNED_BY_ID } }));
+          let local_users_res = await BX24Client.callBatch(users_cmd);
+          let local_table = serializeRes(res, users_res);
+          table = table.concat(local_table);
+        }
+        return table;
+      }
       const serializeRes = function (leads_res, users_res) {
         let leads_data = leads_res.data();
         let users_data = users_res.map(e => ({
@@ -272,8 +409,8 @@
           lead: {
             id: e.ID,
             title: e.TITLE,
-            status: getStatus(e.STATUS_ID) || e.STATUS_ID,
-            source: getSource(e.SOURCE_ID) || e.SOURCE_ID,
+            status: getStatus(e.STATUS_ID) || e.STATUS_ID || 'Нет',
+            source: getSource(e.SOURCE_ID) || e.SOURCE_ID || 'Нет',
             date_create: e.DATE_CREATE ? new Date(e.DATE_CREATE) : null,
             date_modify: e.DATE_MODIFY ? new Date(e.DATE_MODIFY) : null,
             date_close: e.DATE_CLOSED ? new Date(e.DATE_CLOSED) : null,
@@ -281,9 +418,12 @@
         }));
         return table;
       }
-
+      const toggleLoader = function () {
+        $('#loader').hasClass('hidden') ? $('#loader').removeClass('hidden') : $('#loader').addClass('hidden');
+      }
       const updateTable = function (table) {
         $("#report tbody").empty();
+        BX24.fitWindow();
         for (let data of table) {
           $("#report tbody").append(`
             <tr>
@@ -298,15 +438,19 @@
                   ${data.user.name}
                 </div>
               </td>
-              <td class="open-path"
-                path="/crm/lead/details/${data.lead.id}/"
-              >${data.lead.title}</td>
+              <td>
+                <div class="open-path"
+                  path="/crm/lead/details/${data.lead.id}/"
+                >
+                ${data.lead.title}
+                </div>
+              </td>
               <td class="text-centered">${data.lead.id}</td>
-              <td>${data.lead.status || 'Нет'}</td>
-              <td>${data.lead.source || 'Нет'}</td>
-              <td>${data.lead.date_create ? data.lead.date_create.toLocaleDateString('ru-RU') : 'Нет'}</td>
-              <td>${data.lead.date_modify ? data.lead.date_modify.toLocaleDateString('ru-RU') : 'Нет'}</td>
-              <td>${data.lead.date_close ? data.lead.date_close.toLocaleDateString('ru-RU') : 'Нет'}</td>
+              <td>${data.lead.status || ''}</td>
+              <td>${data.lead.source || ''}</td>
+              <td>${data.lead.date_create ? data.lead.date_create.toLocaleDateString('ru-RU') : ''}</td>
+              <td>${data.lead.date_modify ? data.lead.date_modify.toLocaleDateString('ru-RU') : ''}</td>
+              <td>${data.lead.date_close ? data.lead.date_close.toLocaleDateString('ru-RU') : ''}</td>
             </tr>
           `)
         }
