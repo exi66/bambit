@@ -48,6 +48,25 @@
     .text-centered {
       text-align: center;
     }
+
+    .avatar {
+      max-width: 2rem;
+      max-height: 2rem;
+      height: auto;
+      width: 100%;
+      background-color: black;
+      border-radius: 50%;
+      vertical-align: middle;
+    }
+
+    .open-path {
+      cursor: pointer;
+      color: #00415a;
+    }
+
+    .open-path:hover {
+      color: #008dc5;
+    }
   </style>
 </head>
 
@@ -176,12 +195,27 @@
           method: 'crm.status.list', params: {
             order: { 'SORT': 'ASC' },
             filter: { 'ENTITY_ID': 'SOURCE' }
-          }          
+          }
         }
       ]);
       const status_list = status_res[0].data();
       const source_list = status_res[1].data();
 
+      const getStatus = function(id) {
+        let f = status_list.find(e => e.STATUS_ID == id);
+        if (f) return f.NAME;
+      }
+      const getSource = function(id) {
+        let f = source_list.find(e => e.STATUS_ID == id);
+        if (f) return f.NAME;
+      }
+
+      const createListeners = function() {
+        $('.open-path').click(function () {
+          let path = $(this).attr('path');
+          if (path) BX24.openPath(path, function (result) { });
+        });
+      }
 
       new AirDatepicker('#search input[name="start"]', {
         minDate: new Date(1),
@@ -219,10 +253,66 @@
           }
         );
         $('#info_block').text(res.total());
-        console.log(res.data());
-        let users_cmd = res.data().map(e => ({ method: 'user.get', params: { 'ID': e['ASSIGNED_BY_ID'] } }));
+        let leads_data = res.data();
+        let users_cmd = leads_data.map(e => ({ method: 'user.get', params: { 'ID': e.ASSIGNED_BY_ID } }));
         let users_res = await BX24Client.callBatch(users_cmd);
+        let table = serializeRes(res, users_res);
+        updateTable(table);
       });
+
+      const serializeRes = function (leads_res, users_res) {
+        let leads_data = leads_res.data();
+        let users_data = users_res.map(e => ({
+          name: `${e.data()[0].NAME || ''} ${e.data()[0].LAST_NAME || ''}`,
+          id: e.data()[0].ID,
+          photo: e.data()[0].PERSONAL_PHOTO || 'https://dveri-bambit.bitrix24.ru/bitrix/js/ui/icons/b24/images/ui-user.svg?v2'
+        }));
+        let table = leads_data.map(e => ({
+          user: users_data.find(u => u.id == e.ASSIGNED_BY_ID),
+          lead: {
+            id: e.ID,
+            title: e.TITLE,
+            status: getStatus(e.STATUS_ID) || e.STATUS_ID,
+            source: getSource(e.SOURCE_ID) || e.SOURCE_ID,
+            date_create: e.DATE_CREATE ? new Date(e.DATE_CREATE) : null,
+            date_modify: e.DATE_MODIFY ? new Date(e.DATE_MODIFY) : null,
+            date_close: e.DATE_CLOSED ? new Date(e.DATE_CLOSED) : null,
+          }
+        }));
+        return table;
+      }
+
+      const updateTable = function (table) {
+        $("#report tbody").empty();
+        for (let data of table) {
+          $("#report tbody").append(`
+            <tr>
+              <td>
+                <div class="open-path" 
+                  path="/company/personal/user/${data.user.id}/"
+                >
+                  <img class="avatar"
+                    src="${data.user.photo}" 
+                    alt="user avatar"
+                  >
+                  ${data.user.name}
+                </div>
+              </td>
+              <td class="open-path"
+                path="/crm/lead/details/${data.lead.id}/"
+              >${data.lead.title}</td>
+              <td class="text-centered">${data.lead.id}</td>
+              <td>${data.lead.status || 'Нет'}</td>
+              <td>${data.lead.source || 'Нет'}</td>
+              <td>${data.lead.date_create ? data.lead.date_create.toLocaleDateString('ru-RU') : 'Нет'}</td>
+              <td>${data.lead.date_modify ? data.lead.date_modify.toLocaleDateString('ru-RU') : 'Нет'}</td>
+              <td>${data.lead.date_close ? data.lead.date_close.toLocaleDateString('ru-RU') : 'Нет'}</td>
+            </tr>
+          `)
+        }
+        createListeners();
+        BX24.fitWindow();
+      }
     });
 
     BX24.init(BX24.getAuth());
