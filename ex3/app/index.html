@@ -88,6 +88,51 @@
 
     .sort-table {
       cursor: pointer;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      color: #00415a;
+    }
+
+    .sort-table:hover {
+      color: #008dc5;
+    }
+
+    .forward.sort-table {
+      color: #008dc5;
+    }
+
+    .reverse.sort-table {
+      color: #008dc5;
+    }
+
+    .arrow {
+      max-width: 16px;
+      max-height: 16px;
+      height: 2ch;
+      width: auto;
+      vertical-align: middle;
+      content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg data-name='Layer 2'%3E%3Cg data-name='arrow-up'%3E%3Crect transform='rotate(90 12 12)' opacity='0'/%3E%3Cpath d='M16.21 16H7.79a1.76 1.76 0 0 1-1.59-1 2.1 2.1 0 0 1 .26-2.21l4.21-5.1a1.76 1.76 0 0 1 2.66 0l4.21 5.1A2.1 2.1 0 0 1 17.8 15a1.76 1.76 0 0 1-1.59 1z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .sort-table .arrow {
+      visibility: hidden;
+    }
+
+    .sort-table:hover .arrow {
+      visibility: visible;
+    }
+
+    .forward.sort-table .arrow {
+      content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg data-name='Layer 2'%3E%3Cg data-name='arrow-downward'%3E%3Crect transform='rotate(-90 12 12)' opacity='0'/%3E%3Cpath d='M12 17a1.72 1.72 0 0 1-1.33-.64l-4.21-5.1a2.1 2.1 0 0 1-.26-2.21A1.76 1.76 0 0 1 7.79 8h8.42a1.76 1.76 0 0 1 1.59 1.05 2.1 2.1 0 0 1-.26 2.21l-4.21 5.1A1.72 1.72 0 0 1 12 17z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .forward.sort-table .arrow {
+      visibility: visible;
+    }
+
+    .reverse.sort-table .arrow {
+      visibility: visible;
     }
   </style>
 </head>
@@ -118,28 +163,44 @@
         <thead>
           <tr>
             <th>
-              <div class="sort-table" sort-target="user.name" sort-type="string">Ответственный</div>
+              <div class="sort-table" sort-target="user.name" sort-type="string">Ответственный
+                <img class="arrow">
+              </div>
             </th>
             <th>
-              <div class="sort-table" sort-target="lead.title" sort-type="string">Название</div>
+              <div class="sort-table" sort-target="lead.title" sort-type="string">Название
+                <img class="arrow">
+              </div>
             </th>
             <th>
-              <div class="sort-table" sort-target="lead.id" sort-type="integer">#</div>
+              <div class="sort-table" sort-target="lead.id" sort-type="integer">Номер
+                <img class="arrow">
+              </div>
             </th>
             <th>
-              <div class="sort-table" sort-target="lead.status" sort-type="string">Cтатус</div>
+              <div class="sort-table" sort-target="lead.status" sort-type="string">Cтатус
+                <img class="arrow">
+              </div>
             </th>
             <th>
-              <div class="sort-table" sort-target="lead.source" sort-type="string">Источник</div>
+              <div class="sort-table" sort-target="lead.source" sort-type="string">Источник
+                <img class="arrow">
+              </div>
             </th>
             <th>
-              <div class="sort-table" sort-target="lead.date_create" sort-type="date">Дата создания</div>
+              <div class="sort-table" sort-target="lead.date_create" sort-type="date">Дата создания
+                <img class="arrow">
+              </div>
             </th>
             <th>
-              <div class="sort-table" sort-target="lead.date_modify" sort-type="date">Дата изменения</div>
+              <div class="sort-table" sort-target="lead.date_modify" sort-type="date">Дата изменения
+                <img class="arrow">
+              </div>
             </th>
             <th>
-              <div class="sort-table" sort-target="lead.date_close" sort-type="date">Дата закрытия</div>
+              <div class="sort-table" sort-target="lead.date_close" sort-type="date">Дата закрытия
+                <img class="arrow">
+              </div>
             </th>
           </tr>
         </thead>
@@ -247,111 +308,6 @@
         $('#info_block').text(local_res.total());
       }
 
-      new AirDatepicker('#search input[name="start"]', {
-        minDate: new Date(1),
-        maxDate: dateInMoscow(),
-        multipleDates: false,
-        selectedDates: [new Date(dateInMoscow().getFullYear(), dateInMoscow().getMonth(), 1)],
-        dateFormat(date) {
-          return date2str(date);
-        },
-        onSelect({ date }) {
-          updateInfoBlock();
-        }
-      });
-
-      new AirDatepicker('#search input[name="end"]', {
-        minDate: new Date(1),
-        maxDate: dateInMoscow(),
-        multipleDates: false,
-        selectedDates: [dateInMoscow()],
-        dateFormat(date) {
-          return date2str(date);
-        },
-        onSelect({ date }) {
-          updateInfoBlock();
-        }
-      });
-
-
-      $('#search').on('submit', async function (e) {
-        e.preventDefault();
-        let start = $(this).serializeArray().find(e => e.name === 'start'),
-          end = $(this).serializeArray().find(e => e.name === 'end');
-
-        //validate
-        if (isNaN(Date.parse(start.value)) || isNaN(Date.parse(end.value))) return alert('Input must be a date!');
-        if (new Date(start.value).getTime() > new Date(end.value).getTime()) return alert('Start date must be <= end date!');
-
-        toggleLoader();
-        res = await BX24Client.call(
-          'crm.lead.list',
-          {
-            order: { 'ID': 'ASC' },
-            filter: { '>DATE_CREATE': start.value + 'T00:00:00', '<DATE_CREATE': end.value + 'T23:59:59' },
-            select: ['ASSIGNED_BY_ID', 'TITLE', 'ID', 'STATUS_ID', 'SOURCE_ID', 'DATE_CREATE', 'DATE_MODIFY', 'DATE_CLOSED'],
-          }
-        );
-        table_obj = await getData();
-        if (res.more()) {
-          $('#next_page').parent().removeClass('hidden');
-        }
-        updateTable(table_obj);
-        toggleLoader();
-        BX24.fitWindow();
-      });
-
-      $('#next_page').click(async function () {
-        toggleLoader();
-
-        res = await BX24Client.next(res);
-        table_obj = await getData();
-        if (!res.more()) {
-          $(this).parent().addClass('hidden');
-        }
-        updateTable(table_obj);
-        toggleLoader();
-        BX24.fitWindow();
-      });
-
-      $('.sort-table').click(function () {
-        if (!(table_obj instanceof Array)) return;
-        let reverse = $(this).hasClass('active'),
-          keys = $(this).attr('sort-target').split('.'),
-          sort_type = $(this).attr('sort-type');
-        let compare = reverse ? function (a, b) {
-          if (sort_type === 'string') {
-            return b[keys[0]][keys[1]].localeCompare(a[keys[0]][keys[1]]);
-          }
-          if (sort_type === 'integer') {
-            return b[keys[0]][keys[1]] - a[keys[0]][keys[1]];
-          }
-          if (sort_type === 'date') {
-            return new Date(b[keys[0]][keys[1]]).getTime() - new Date(a[keys[0]][keys[1]]).getTime();
-          }
-        } : function (a, b) {
-          if (sort_type === 'string') {
-            return a[keys[0]][keys[1]].localeCompare(b[keys[0]][keys[1]]);
-          }
-          if (sort_type === 'integer') {
-            return a[keys[0]][keys[1]] - b[keys[0]][keys[1]];
-          }
-          if (sort_type === 'date') {
-            return new Date(a[keys[0]][keys[1]]).getTime() - new Date(b[keys[0]][keys[1]]).getTime();
-          }
-        };
-        $('.sort-table').removeClass('active');
-        if (!reverse) $(this).addClass('active');
-        table_obj.sort(compare);
-        updateTable(table_obj);
-        BX24.fitWindow();
-      })
-
-      /*
-      * Работа с dom деревом закончена
-      * Ниже непосредственный функционал
-      */
-
       const status_res = await BX24Client.callBatch([
         {
           method: 'crm.status.list', params: {
@@ -376,12 +332,14 @@
         let f = source_list.find(e => e.STATUS_ID == id);
         if (f) return f.NAME;
       }
+
       const createListeners = function () {
         $('.open-path').click(function () {
           let path = $(this).attr('path');
           if (path) BX24.openPath(path, function (result) { });
         });
       }
+
       const getData = async function () {
         let leads_data = res.data();
         let users_cmd = leads_data.map(e => ({ method: 'user.get', params: { 'ID': e.ASSIGNED_BY_ID } }));
@@ -397,6 +355,7 @@
         }
         return table;
       }
+
       const serializeRes = function (leads_res, users_res) {
         let leads_data = leads_res.data();
         let users_data = users_res.map(e => ({
@@ -418,9 +377,11 @@
         }));
         return table;
       }
+
       const toggleLoader = function () {
         $('#loader').hasClass('hidden') ? $('#loader').removeClass('hidden') : $('#loader').addClass('hidden');
       }
+
       const updateTable = function (table) {
         $("#report tbody").empty();
         BX24.fitWindow();
@@ -457,6 +418,111 @@
         createListeners();
         BX24.fitWindow();
       }
+
+      /*
+      * Работа с DOM деревом
+      */
+
+      new AirDatepicker('#search input[name="start"]', {
+        minDate: new Date(1),
+        maxDate: dateInMoscow(),
+        multipleDates: false,
+        selectedDates: [new Date(dateInMoscow().getFullYear(), dateInMoscow().getMonth(), 1)],
+        dateFormat(date) {
+          return date2str(date);
+        },
+        onSelect({ date }) {
+          updateInfoBlock();
+        }
+      });
+
+      new AirDatepicker('#search input[name="end"]', {
+        minDate: new Date(1),
+        maxDate: dateInMoscow(),
+        multipleDates: false,
+        selectedDates: [dateInMoscow()],
+        dateFormat(date) {
+          return date2str(date);
+        },
+        onSelect({ date }) {
+          updateInfoBlock();
+        }
+      });
+
+      $('#search').on('submit', async function (e) {
+        e.preventDefault();
+        let start = $(this).serializeArray().find(e => e.name === 'start'),
+          end = $(this).serializeArray().find(e => e.name === 'end');
+
+        //validate
+        if (isNaN(Date.parse(start.value)) || isNaN(Date.parse(end.value))) return alert('Input must be a date!');
+        if (new Date(start.value).getTime() > new Date(end.value).getTime()) return alert('Start date must be <= end date!');
+
+        toggleLoader();
+        res = await BX24Client.call(
+          'crm.lead.list',
+          {
+            order: { 'ID': 'ASC' },
+            filter: { '>DATE_CREATE': start.value + 'T00:00:00', '<DATE_CREATE': end.value + 'T23:59:59' },
+            select: ['ASSIGNED_BY_ID', 'TITLE', 'ID', 'STATUS_ID', 'SOURCE_ID', 'DATE_CREATE', 'DATE_MODIFY', 'DATE_CLOSED'],
+          }
+        );
+        $('#info_block').text(res.total());
+        table_obj = await getData();
+        if (res.more()) {
+          $('#next_page').parent().removeClass('hidden');
+        }
+        updateTable(table_obj);
+        toggleLoader();
+        BX24.fitWindow();
+      });
+
+      $('#next_page').click(async function () {
+        toggleLoader();
+
+        res = await BX24Client.next(res);
+        table_obj = await getData();
+        if (!res.more()) {
+          $(this).parent().addClass('hidden');
+        }
+        updateTable(table_obj);
+        toggleLoader();
+        BX24.fitWindow();
+      });
+
+      $('.sort-table').click(function () {
+        if (!(table_obj instanceof Array)) return;
+        let reverse = $(this).hasClass('forward'),
+          keys = $(this).attr('sort-target').split('.'),
+          sort_type = $(this).attr('sort-type');
+        let compare = reverse ? function (a, b) {
+          if (sort_type === 'string') {
+            return b[keys[0]][keys[1]].localeCompare(a[keys[0]][keys[1]]);
+          }
+          if (sort_type === 'integer') {
+            return b[keys[0]][keys[1]] - a[keys[0]][keys[1]];
+          }
+          if (sort_type === 'date') {
+            return new Date(a[keys[0]][keys[1]]).getTime() - new Date(b[keys[0]][keys[1]]).getTime();
+          }
+        } : function (a, b) {
+          if (sort_type === 'string') {
+            return a[keys[0]][keys[1]].localeCompare(b[keys[0]][keys[1]]);
+          }
+          if (sort_type === 'integer') {
+            return a[keys[0]][keys[1]] - b[keys[0]][keys[1]];
+          }
+          if (sort_type === 'date') {
+            return new Date(b[keys[0]][keys[1]]).getTime() - new Date(a[keys[0]][keys[1]]).getTime();
+          }
+        };
+        $('.sort-table').removeClass('forward reverse');
+        if (!reverse) $(this).addClass('forward');
+        else $(this).addClass('reverse');
+        table_obj.sort(compare);
+        updateTable(table_obj);
+        BX24.fitWindow();
+      })
     });
 
     BX24.init(BX24.getAuth());
