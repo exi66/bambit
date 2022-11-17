@@ -45,15 +45,25 @@
       padding-right: .25rem;
     }
 
+    th:hover {
+      background-color: rgba(0, 0, 0, 0.3);
+    }
+
+    td:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    tbody tr:hover {
+      background-color: rgba(0, 0, 0, 0.2);
+    }
+
     .text-centered {
       text-align: center;
     }
 
     .avatar {
-      max-width: 2rem;
-      max-height: 2rem;
-      height: auto;
-      width: 100%;
+      height: 2rem;
+      width: 2rem;
       background-color: black;
       border-radius: 50%;
       vertical-align: middle;
@@ -66,6 +76,7 @@
 
     .open-path:hover {
       color: #008dc5;
+      text-decoration: underline;
     }
 
     #loader {
@@ -112,7 +123,7 @@
       height: 2ch;
       width: auto;
       vertical-align: middle;
-      content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg data-name='Layer 2'%3E%3Cg data-name='arrow-up'%3E%3Crect transform='rotate(90 12 12)' opacity='0'/%3E%3Cpath d='M16.21 16H7.79a1.76 1.76 0 0 1-1.59-1 2.1 2.1 0 0 1 .26-2.21l4.21-5.1a1.76 1.76 0 0 1 2.66 0l4.21 5.1A2.1 2.1 0 0 1 17.8 15a1.76 1.76 0 0 1-1.59 1z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg data-name='Layer 2'%3E%3Cg data-name='arrow-downward'%3E%3Crect transform='rotate(-90 12 12)' opacity='0'/%3E%3Cpath d='M12 17a1.72 1.72 0 0 1-1.33-.64l-4.21-5.1a2.1 2.1 0 0 1-.26-2.21A1.76 1.76 0 0 1 7.79 8h8.42a1.76 1.76 0 0 1 1.59 1.05 2.1 2.1 0 0 1-.26 2.21l-4.21 5.1A1.72 1.72 0 0 1 12 17z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     }
 
     .sort-table .arrow {
@@ -127,6 +138,10 @@
       content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg data-name='Layer 2'%3E%3Cg data-name='arrow-downward'%3E%3Crect transform='rotate(-90 12 12)' opacity='0'/%3E%3Cpath d='M12 17a1.72 1.72 0 0 1-1.33-.64l-4.21-5.1a2.1 2.1 0 0 1-.26-2.21A1.76 1.76 0 0 1 7.79 8h8.42a1.76 1.76 0 0 1 1.59 1.05 2.1 2.1 0 0 1-.26 2.21l-4.21 5.1A1.72 1.72 0 0 1 12 17z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     }
 
+    .reverse.sort-table .arrow {
+      content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg data-name='Layer 2'%3E%3Cg data-name='arrow-up'%3E%3Crect transform='rotate(90 12 12)' opacity='0'/%3E%3Cpath d='M16.21 16H7.79a1.76 1.76 0 0 1-1.59-1 2.1 2.1 0 0 1 .26-2.21l4.21-5.1a1.76 1.76 0 0 1 2.66 0l4.21 5.1A2.1 2.1 0 0 1 17.8 15a1.76 1.76 0 0 1-1.59 1z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
     .forward.sort-table .arrow {
       visibility: visible;
     }
@@ -138,7 +153,7 @@
 </head>
 
 <body>
-  <main>
+  <main id="app">
     <div id="loader" class="hidden"></div>
     <h1>Таблица отчетности по Лидам за период</h1>
     <div class="wrapper form-wrapper">
@@ -146,11 +161,11 @@
       <form autocomplete="off" id="search">
         <label>
           От
-          <input class="data-picker" autocomplete="false" type="text" name="start" required>
+          <input class="data-picker" autocomplete="false" type="text" name="start" required readonly>
         </label>
         <label>
           До
-          <input class="data-picker" autocomplete="false" type="text" name="end" required>
+          <input class="data-picker" autocomplete="false" type="text" name="end" required readonly>
         </label>
         <button type="submit">Найти</button>
       </form>
@@ -173,7 +188,7 @@
               </div>
             </th>
             <th>
-              <div class="sort-table" sort-target="lead.id" sort-type="integer">Номер
+              <div class="sort-table forward" sort-target="lead.id" sort-type="integer">Номер
                 <img class="arrow">
               </div>
             </th>
@@ -221,12 +236,13 @@
       </table>
     </div>
     <div class="wrapper pagination-wrapper hidden">
-      <button id="next_page">Следующая</button>
+      <button id="prev_page">Предыдущая</button> <button id="next_page">Следующая</button>
     </div>
   </main>
   <script>
-    let res;
     let table_obj;
+    let pages_obj;
+    let page = 0;
     const TIMEOUT = 500;
     const BX24Client = {
       call: function (method, params) {
@@ -340,39 +356,38 @@
         });
       }
 
-      const getData = async function () {
-        let leads_data = res.data();
-        let users_cmd = leads_data.map(e => ({ method: 'user.get', params: { 'ID': e.ASSIGNED_BY_ID } }));
-        let users_res = await BX24Client.callBatch(users_cmd);
-        let table = serializeRes(res, users_res);
-        if (res.more()) {
-          res = await BX24Client.next(res);
-          let local_leads_data = res.data();
-          let local_users_cmd = leads_data.map(e => ({ method: 'user.get', params: { 'ID': e.ASSIGNED_BY_ID } }));
-          let local_users_res = await BX24Client.callBatch(users_cmd);
-          let local_table = serializeRes(res, users_res);
+      const getData = async function (res) {
+        let local_res = res;
+        let table = [];
+        while (true) {
+          let local_leads_data = local_res.data();
+          let local_users_cmd = local_leads_data.filter(e => e.ASSIGNED_BY_ID).map(e => ({ method: 'user.get', params: { 'ID': e.ASSIGNED_BY_ID } }));
+          let local_users_res = await BX24Client.callBatch(local_users_cmd);
+          let local_table = serializeRes(local_res, local_users_res);
           table = table.concat(local_table);
+          if (local_res.more()) local_res = await BX24Client.next(local_res);
+          else break;
         }
         return table;
       }
 
       const serializeRes = function (leads_res, users_res) {
         let leads_data = leads_res.data();
-        let users_data = users_res.map(e => ({
+        let users_data = users_res.filter(e => e.data()[0]).map(e => ({
           name: `${e.data()[0].NAME || ''} ${e.data()[0].LAST_NAME || ''}`,
           id: e.data()[0].ID,
-          photo: e.data()[0].PERSONAL_PHOTO || 'https://dveri-bambit.bitrix24.ru/bitrix/js/ui/icons/b24/images/ui-user.svg?v2'
+          photo: e.data()[0].PERSONAL_PHOTO || 'https://dveri-bambit.bitrix24.ru/bitrix/js/ui/icons/b24/images/ui-user.svg?v2',
         }));
         let table = leads_data.map(e => ({
-          user: users_data.find(u => u.id == e.ASSIGNED_BY_ID),
+          user: users_data.find(u => u.id == e.ASSIGNED_BY_ID) || { name: 'Пользователь не найден', id: -1, photo: 'https://dveri-bambit.bitrix24.ru/bitrix/js/ui/icons/b24/images/ui-user.svg?v2' },
           lead: {
             id: e.ID,
             title: e.TITLE,
             status: getStatus(e.STATUS_ID) || e.STATUS_ID || 'Нет',
             source: getSource(e.SOURCE_ID) || e.SOURCE_ID || 'Нет',
-            date_create: e.DATE_CREATE ? new Date(e.DATE_CREATE) : null,
-            date_modify: e.DATE_MODIFY ? new Date(e.DATE_MODIFY) : null,
-            date_close: e.DATE_CLOSED ? new Date(e.DATE_CLOSED) : null,
+            date_create: e.DATE_CREATE,
+            date_modify: e.DATE_MODIFY,
+            date_close: e.DATE_CLOSED,
           }
         }));
         return table;
@@ -384,39 +399,51 @@
 
       const updateTable = function (table) {
         $("#report tbody").empty();
-        BX24.fitWindow();
         for (let data of table) {
-          $("#report tbody").append(`
-            <tr>
-              <td>
-                <div class="open-path" 
-                  path="/company/personal/user/${data.user.id}/"
-                >
-                  <img class="avatar"
-                    src="${data.user.photo}" 
-                    alt="user avatar"
+          try {
+            $("#report tbody").append(`
+              <tr>
+                <td>
+                  <div ${data.user.id !== -1 ? 'class="open-path" path="/company/personal/user/' + data.user.id + '/"' : ''}>
+                    <img class="avatar"
+                      src="${data.user.photo}" 
+                      alt="user avatar"
+                    >
+                    ${data.user.name}
+                  </div>
+                </td>
+                <td>
+                  <div class="open-path"
+                    path="/crm/lead/details/${data.lead.id}/"
                   >
-                  ${data.user.name}
-                </div>
-              </td>
-              <td>
-                <div class="open-path"
-                  path="/crm/lead/details/${data.lead.id}/"
-                >
-                ${data.lead.title}
-                </div>
-              </td>
-              <td class="text-centered">${data.lead.id}</td>
-              <td>${data.lead.status || ''}</td>
-              <td>${data.lead.source || ''}</td>
-              <td>${data.lead.date_create ? data.lead.date_create.toLocaleDateString('ru-RU') : ''}</td>
-              <td>${data.lead.date_modify ? data.lead.date_modify.toLocaleDateString('ru-RU') : ''}</td>
-              <td>${data.lead.date_close ? data.lead.date_close.toLocaleDateString('ru-RU') : ''}</td>
-            </tr>
-          `)
+                  ${data.lead.title}
+                  </div>
+                </td>
+                <td class="text-centered">${data.lead.id}</td>
+                <td>${data.lead.status || ''}</td>
+                <td>${data.lead.source || ''}</td>
+                <td>${data.lead.date_create ? new Date(data.lead.date_create).toLocaleDateString('ru-RU') : ''}</td>
+                <td>${data.lead.date_modify ? new Date(data.lead.date_modify).toLocaleDateString('ru-RU') : ''}</td>
+                <td>${data.lead.date_close ? new Date(data.lead.date_close).toLocaleDateString('ru-RU') : ''}</td>
+              </tr>
+            `)
+          } catch (e) {
+            console.error('Bad data in table: ');
+            console.error(data);
+            console.error(e);
+          }
         }
         createListeners();
+        BX24.resizeWindow(document.body.clientWidth, $('#app').height());
         BX24.fitWindow();
+      }
+
+      const createPages = function (table) {
+        console.log(table);
+        let local_table = JSON.parse(JSON.stringify(table)), result = [], length = 100;
+        while (local_table.length) result.push(local_table.splice(0, length));
+        console.log(result);
+        return result;
       }
 
       /*
@@ -459,7 +486,7 @@
         if (new Date(start.value).getTime() > new Date(end.value).getTime()) return alert('Start date must be <= end date!');
 
         toggleLoader();
-        res = await BX24Client.call(
+        let res = await BX24Client.call(
           'crm.lead.list',
           {
             order: { 'ID': 'ASC' },
@@ -468,26 +495,23 @@
           }
         );
         $('#info_block').text(res.total());
-        table_obj = await getData();
-        if (res.more()) {
-          $('#next_page').parent().removeClass('hidden');
+        if (res.total() === 0) return;
+        table_obj = await getData(res);
+        pages_obj = createPages(table_obj);
+
+        if (pages_obj.length > 1) {
+          $('.pagination-wrapper').removeClass('hidden');
         }
-        updateTable(table_obj);
+        updateTable(pages_obj[page]);
         toggleLoader();
-        BX24.fitWindow();
       });
 
-      $('#next_page').click(async function () {
-        toggleLoader();
+      $('#next_page').click(function () {
+        pages_obj.length - 1 <= page ? updateTable(pages_obj[pages_obj.length - 1]) : updateTable(pages_obj[++page]);
+      });
 
-        res = await BX24Client.next(res);
-        table_obj = await getData();
-        if (!res.more()) {
-          $(this).parent().addClass('hidden');
-        }
-        updateTable(table_obj);
-        toggleLoader();
-        BX24.fitWindow();
+      $('#prev_page').click(function () {
+        0 <= page ? updateTable(pages_obj[0]) : updateTable(pages_obj[--page]);
       });
 
       $('.sort-table').click(function () {
@@ -520,12 +544,14 @@
         if (!reverse) $(this).addClass('forward');
         else $(this).addClass('reverse');
         table_obj.sort(compare);
-        updateTable(table_obj);
-        BX24.fitWindow();
+        pages_obj = createPages(table_obj);
+        page = 0;
+        updateTable(pages_obj[page]);
       })
     });
 
     BX24.init(BX24.getAuth());
+    BX24.resizeWindow(document.body.clientWidth, $('#app').height());
     BX24.fitWindow();
   </script>
 </body>
