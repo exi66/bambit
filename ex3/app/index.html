@@ -385,9 +385,9 @@
             title: e.TITLE,
             status: getStatus(e.STATUS_ID) || e.STATUS_ID || 'Нет',
             source: getSource(e.SOURCE_ID) || e.SOURCE_ID || 'Нет',
-            date_create: e.DATE_CREATE,
-            date_modify: e.DATE_MODIFY,
-            date_close: e.DATE_CLOSED,
+            date_create: e.DATE_CREATE || 1,
+            date_modify: e.DATE_MODIFY || 1,
+            date_close: e.DATE_CLOSED || 1,
           }
         }));
         return table;
@@ -422,9 +422,9 @@
                 <td class="text-centered">${data.lead.id}</td>
                 <td>${data.lead.status || ''}</td>
                 <td>${data.lead.source || ''}</td>
-                <td>${data.lead.date_create ? new Date(data.lead.date_create).toLocaleDateString('ru-RU') : ''}</td>
-                <td>${data.lead.date_modify ? new Date(data.lead.date_modify).toLocaleDateString('ru-RU') : ''}</td>
-                <td>${data.lead.date_close ? new Date(data.lead.date_close).toLocaleDateString('ru-RU') : ''}</td>
+                <td>${data.lead.date_create !== 1 ? new Date(data.lead.date_create).toLocaleDateString('ru-RU') : ''}</td>
+                <td>${data.lead.date_modify !== 1 ? new Date(data.lead.date_modify).toLocaleDateString('ru-RU') : ''}</td>
+                <td>${data.lead.date_close !== 1 ? new Date(data.lead.date_close).toLocaleDateString('ru-RU') : ''}</td>
               </tr>
             `)
           } catch (e) {
