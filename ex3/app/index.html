@@ -70,6 +70,8 @@
     }
 
     .open-path {
+      max-width: 32ch;
+      overflow: hidden;
       cursor: pointer;
       color: #00415a;
     }
@@ -91,10 +93,6 @@
       background-size: 5rem;
       background-position: center;
       background-color: white;
-    }
-
-    .hidden {
-      display: none;
     }
 
     .sort-table {
@@ -149,6 +147,23 @@
     .reverse.sort-table .arrow {
       visibility: visible;
     }
+
+    .pagination-wrapper {
+      display: inline-flex;
+    }
+
+    .pagination-wrapper button {
+      margin-left: .25rem;
+      margin-right: .25rem;
+    }
+
+    .goto-page.current-page {
+      background-color: #008dc5;
+    }
+
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 
@@ -172,6 +187,13 @@
     </div>
     <div class="wrapper info-wrapper">
       Найдено лидов: <span id="info_block">0</span> шт
+    </div>
+    <div class="wrapper pagination-wrapper hidden">
+      <button class="first-page">Первая</button>
+      <button class="prev-page">Предыдущая</button>
+      <div class="pages_wrapper"></div>
+      <button class="next-page">Следующая</button>
+      <button class="last-page">Последняя</button>
     </div>
     <div class="wrapper table-wrapper">
       <table id="report">
@@ -236,7 +258,12 @@
       </table>
     </div>
     <div class="wrapper pagination-wrapper hidden">
-      <button id="prev_page">Предыдущая</button> <button id="next_page">Следующая</button>
+      <button class="first-page">Первая</button>
+      <button class="prev-page">Предыдущая</button>
+      <div class="pages_wrapper">
+      </div>
+      <button class="next-page">Следующая</button>
+      <button class="last-page">Последняя</button>
     </div>
   </main>
   <script>
@@ -434,16 +461,31 @@
           }
         }
         createListeners();
-        BX24.resizeWindow(document.body.clientWidth, $('#app').height());
-        BX24.fitWindow();
+        BX24.resizeWindow($("#app").width(), $("#app").height(), (result) => { BX24.fitWindow() });
       }
 
       const createPages = function (table) {
-        console.log(table);
         let local_table = JSON.parse(JSON.stringify(table)), result = [], length = 100;
         while (local_table.length) result.push(local_table.splice(0, length));
-        console.log(result);
         return result;
+      }
+
+      const createPagesButtons = function () {
+        $('.pages_wrapper').empty();
+        for (let i = Math.max(0, page - 6); i < page; i++) {
+          $('.pages_wrapper').append(`<button class="goto-page" page="${i}">${i + 1}</button>`);
+        }
+        $('.pages_wrapper').append(`<button class="goto-page current-page" page="${page}">${1 + page}</button>`);
+        for (let i = page + 1; i < Math.min(pages_obj.length, page + 6); i++) {
+          $('.pages_wrapper').append(`<button class="goto-page" page="${i}">${i + 1}</button>`);
+        }
+
+        $('.goto-page').click(function () {
+          let local_page = $(this).attr('page');
+          if (local_page >= 0 && local_page <= pages_obj.length - 1) page = parseInt(local_page);
+          updateTable(pages_obj[page]);
+          createPagesButtons();
+        });
       }
 
       /*
@@ -501,17 +543,36 @@
 
         if (pages_obj.length > 1) {
           $('.pagination-wrapper').removeClass('hidden');
+          createPagesButtons();
         }
         updateTable(pages_obj[page]);
         toggleLoader();
       });
 
-      $('#next_page').click(function () {
-        pages_obj.length - 1 <= page ? updateTable(pages_obj[pages_obj.length - 1]) : updateTable(pages_obj[++page]);
+      $('.next-page').click(function () {
+        if (page >= pages_obj.length - 1) page = pages_obj.length - 1
+        else page++;
+        updateTable(pages_obj[page]);
+        createPagesButtons();
       });
 
-      $('#prev_page').click(function () {
-        0 <= page ? updateTable(pages_obj[0]) : updateTable(pages_obj[--page]);
+      $('.prev-page').click(function () {
+        if (page < 1) page = 0;
+        else page--;
+        updateTable(pages_obj[page]);
+        createPagesButtons();
+      });
+
+      $('.first-page').click(function () {
+        page = 0;
+        updateTable(pages_obj[page]);
+        createPagesButtons();
+      });
+
+      $('.last-page').click(function () {
+        page = pages_obj.length - 1;
+        updateTable(pages_obj[page]);
+        createPagesButtons();
       });
 
       $('.sort-table').click(function () {
@@ -547,12 +608,12 @@
         pages_obj = createPages(table_obj);
         page = 0;
         updateTable(pages_obj[page]);
+        createPagesButtons();
       })
     });
 
     BX24.init(BX24.getAuth());
-    BX24.resizeWindow(document.body.clientWidth, $('#app').height());
-    BX24.fitWindow();
+    BX24.resizeWindow($("#app").width(), $("#app").height(), (result) => { BX24.fitWindow() });
   </script>
 </body>
 
