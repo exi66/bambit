@@ -555,7 +555,7 @@
             select: ['ASSIGNED_BY_ID', 'TITLE', 'ID', 'STATUS_ID', 'SOURCE_ID', 'DATE_CREATE', 'DATE_MODIFY', 'DATE_CLOSED'],
           }
         );
-        $('#info_block').text(res.total());
+        $('#info_block').text(res.total() + ' шт.');
         if (res.total() === 0) return;
         table_obj = await getData(res);
         pages_obj = createPages(table_obj);
