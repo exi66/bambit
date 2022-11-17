@@ -286,6 +286,7 @@
   <script>
     let table_obj;
     let pages_obj;
+    let users_obj;
     let page = 0;
     const TIMEOUT = 500;
     const BX24Client = {
@@ -402,27 +403,29 @@
         });
       }
 
-      const getData = async function (res) {
-        let local_res = res;
-        let table = [];
-        while (true) {
-          let local_leads_data = local_res.data();
-          let local_users_cmd = local_leads_data.filter(e => e.ASSIGNED_BY_ID).map(e => ({ method: 'user.get', params: { 'ID': e.ASSIGNED_BY_ID } }));
-          let local_users_res = await BX24Client.callBatch(local_users_cmd);
-          let local_table = serializeRes(local_res, local_users_res);
+      const getData = async function (start_date, end_date) {
+        let res = await BX24Client.call(
+          'crm.lead.list',
+          {
+            order: { 'ID': 'ASC' },
+            filter: { '>DATE_CREATE': start_date + 'T00:00:00', '<DATE_CREATE': end_date + 'T23:59:59' },
+            select: ['ASSIGNED_BY_ID', 'TITLE', 'ID', 'STATUS_ID', 'SOURCE_ID', 'DATE_CREATE', 'DATE_MODIFY', 'DATE_CLOSED'],
+          }
+        );
+        let table = serializeRes(res.data(), users_obj);
+        while (res.more()) {
+          res = await BX24Client.next(res);
+          let local_table = serializeRes(res.data(), users_obj);
           table = table.concat(local_table);
-          if (local_res.more()) local_res = await BX24Client.next(local_res);
-          else break;
         }
         return table;
       }
 
-      const serializeRes = function (leads_res, users_res) {
-        let leads_data = leads_res.data();
-        let users_data = users_res.filter(e => e.data()[0]).map(e => ({
-          name: `${e.data()[0].NAME || ''} ${e.data()[0].LAST_NAME || ''}`,
-          id: e.data()[0].ID,
-          photo: e.data()[0].PERSONAL_PHOTO || 'https://dveri-bambit.bitrix24.ru/bitrix/js/ui/icons/b24/images/ui-user.svg?v2',
+      const serializeRes = function (leads_data, users_res) {
+        let users_data = users_res.map(e => ({
+          name: `${e.NAME || ''} ${e.LAST_NAME || ''}`,
+          id: e.ID,
+          photo: e.PERSONAL_PHOTO || 'https://dveri-bambit.bitrix24.ru/bitrix/js/ui/icons/b24/images/ui-user.svg?v2',
         }));
         let table = leads_data.map(e => ({
           user: users_data.find(u => u.id == e.ASSIGNED_BY_ID) || { name: 'Пользователь не найден', id: -1, photo: 'https://dveri-bambit.bitrix24.ru/bitrix/js/ui/icons/b24/images/ui-user.svg?v2' },
@@ -511,31 +514,34 @@
       * Работа с DOM деревом
       */
 
-      new AirDatepicker('#search input[name="start"]', {
+      let startDatePicker = new AirDatepicker('#search input[name="start"]', {
         minDate: new Date(1),
-        maxDate: dateInMoscow(),
-        multipleDates: false,
-        selectedDates: [new Date(dateInMoscow().getFullYear(), dateInMoscow().getMonth(), 1)],
         dateFormat(date) {
           return date2str(date);
         },
         onSelect({ date }) {
+          endDatePicker.update({
+            minDate: date,
+          });
           updateInfoBlock();
         }
       });
 
-      new AirDatepicker('#search input[name="end"]', {
-        minDate: new Date(1),
+      let endDatePicker = new AirDatepicker('#search input[name="end"]', {
         maxDate: dateInMoscow(),
         multipleDates: false,
-        selectedDates: [dateInMoscow()],
         dateFormat(date) {
           return date2str(date);
         },
         onSelect({ date }) {
+          startDatePicker.update({
+            maxDate: date,
+          });
           updateInfoBlock();
         }
       });
+      startDatePicker.selectDate(new Date(dateInMoscow().getFullYear(), dateInMoscow().getMonth(), 1), { silent: false });
+      endDatePicker.selectDate(dateInMoscow(), { silent: false });
 
       $('#search').on('submit', async function (e) {
         e.preventDefault();
@@ -543,21 +549,17 @@
           end = $(this).serializeArray().find(e => e.name === 'end');
 
         //validate
-        if (isNaN(Date.parse(start.value)) || isNaN(Date.parse(end.value))) return alert('Input must be a date!');
-        if (new Date(start.value).getTime() > new Date(end.value).getTime()) return alert('Start date must be <= end date!');
+        if (isNaN(Date.parse(start.value)) || isNaN(Date.parse(end.value))) return;
+        if (new Date(start.value).getTime() > new Date(end.value).getTime()) return;
 
         toggleLoader();
-        let res = await BX24Client.call(
-          'crm.lead.list',
-          {
-            order: { 'ID': 'ASC' },
-            filter: { '>DATE_CREATE': start.value + 'T00:00:00', '<DATE_CREATE': end.value + 'T23:59:59' },
-            select: ['ASSIGNED_BY_ID', 'TITLE', 'ID', 'STATUS_ID', 'SOURCE_ID', 'DATE_CREATE', 'DATE_MODIFY', 'DATE_CLOSED'],
-          }
-        );
-        $('#info_block').text(res.total() + ' шт.');
-        if (res.total() === 0) return;
-        table_obj = await getData(res);
+        let user_res = await BX24Client.call('user.get', {});
+        users_obj = user_res.data();
+        while (user_res.more()) {
+          user_res = await BX24Client.next(user_res);
+          users_obj = users_obj.concat(user_res.data());
+        }
+        table_obj = await getData(start.value, end.value);
         pages_obj = createPages(table_obj);
 
         if (pages_obj.length > 1) {
