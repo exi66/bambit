@@ -128,19 +128,22 @@ tbody tr:hover {
   vertical-align: middle;
 }
 
-.open-path {
+.open-path-wrapper {
   max-width: 10rem;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
   overflow: hidden;
-  cursor: pointer;
   color: #0e3577;
   display: inline-block;
   white-space: nowrap;
   vertical-align: middle;
 }
 
-.open-path:hover {
+.open-path { 
+  cursor: pointer;
+}
+
+.open-path:hover .open-path-wrapper {
   color: #1058d0;
   text-decoration: underline;
 }
@@ -267,13 +270,13 @@ tbody tr:hover {
 }
 
 @media (min-width: 1200px) {
-  .open-path {
+  .open-path-wrapper {
     max-width: 16rem;
   }
 }
 
 @media (min-width: 1400px) {
-  .open-path {
+  .open-path-wrapper {
     max-width: 24rem;
   }
 }

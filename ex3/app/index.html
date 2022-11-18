@@ -10,7 +10,7 @@
   <script src="https://dev.bambit.ru/burul/resources/js/bx-24-wrapper.js"></script>
   <script src="./js/air-datepicker.min.js"></script>
 
-  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/style.css?v3">
   <link rel="stylesheet" href="./css/air-datepicker.min.css">
   <title>app</title>
 </head>
@@ -279,8 +279,8 @@
           try {
             $("#report tbody").append(
               `<tr>
-                <td>
-                  <div ${data.user.id !== -1 ? 'class="open-path" path="/company/personal/user/' + data.user.id + '/"' : ''}>
+                <td ${data.user.id !== -1 ? 'class="open-path" path="/company/personal/user/' + data.user.id + '/"' : ''}>
+                  <div class="open-path-wrapper">
                     <img class="avatar"
                       src="${data.user.photo}" 
                       alt="user avatar"
@@ -288,10 +288,9 @@
                     ${data.user.name}
                   </div>
                 </td>
-                <td>
-                  <div class="open-path"
-                    path="/crm/lead/details/${data.lead.id}/"
-                  >
+                <td class="open-path"
+                    path="/crm/lead/details/${data.lead.id}/">
+                  <div class="open-path-wrapper">
                   ${data.lead.title}
                   </div>
                 </td>
