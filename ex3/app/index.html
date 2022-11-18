@@ -22,9 +22,65 @@
       font-family: Arial, Helvetica, sans-serif !important;
     }
 
+    input {
+      padding-top: .5rem;
+      padding-bottom: .5rem;
+      padding-left: 1rem;
+      padding-right: 1rem;
+      width: 10ch;
+      border: 1px solid;
+      border-radius: 3px;
+      border-color: lightslategrey;
+    }
+
+    label,
+    input {
+      display: -webkit-box;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-orient: vertical;
+      -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+      flex-direction: column;
+    }
+
+    form {
+      display: -webkit-box;
+      display: -ms-flexbox;
+      display: flex;
+    }
+
+    .input-wrapper {
+      margin: auto 1rem 0 0;
+    }
+
+    button.btn {
+      padding-top: .5rem;
+      padding-bottom: .5rem;
+      padding-left: 1rem;
+      padding-right: 1rem;
+      border: 1px solid;
+      border-color: #0e3577;
+      background-color: #0e3577;
+      border-radius: 3px;
+      color: white;
+    }
+
+    button.btn:hover {
+      border-color: #1058d0;
+      background-color: #1058d0;
+    }
+
+    button.btn:disabled,
+    button.btn[disabled] {
+      border-color: #7a7a7a;
+      background-color: #7a7a7a;
+      color: black;
+    }
+
     .wrapper {
-      margin-top: .5rem;
-      margin-bottom: .5rem;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
       width: 100%;
     }
 
@@ -33,28 +89,43 @@
       border-collapse: collapse;
     }
 
+    .table-wrapper {
+      margin: 0;
+    }
+
+    .info-wrapper {
+      margin-top: 0;
+    }
+
     table,
     th,
     td {
       border: 1px solid;
+      border-color: lightslategrey;
     }
+
 
     th,
     td {
-      padding-left: .25rem;
-      padding-right: .25rem;
+      padding-left: .15rem;
+      padding-right: .15rem;
+    }
+
+    th {
+      padding-top: .5rem;
+      padding-bottom: .5rem;
     }
 
     th:hover {
-      background-color: rgba(0, 0, 0, 0.3);
+      background-color: rgba(0, 0, 0, .15);
     }
 
     td:hover {
-      background-color: rgba(0, 0, 0, 0.1);
+      background-color: rgba(0, 0, 0, .1);
     }
 
     tbody tr:hover {
-      background-color: rgba(0, 0, 0, 0.2);
+      background-color: rgba(0, 0, 0, .05);
     }
 
     .text-centered {
@@ -70,56 +141,69 @@
     }
 
     .open-path {
-      max-width: 32ch;
+      max-width: 10rem;
+      -o-text-overflow: ellipsis;
+      text-overflow: ellipsis;
       overflow: hidden;
       cursor: pointer;
-      color: #00415a;
+      color: #0e3577;
+      display: inline-block;
+      white-space: nowrap;
+      vertical-align: middle;
     }
 
     .open-path:hover {
-      color: #008dc5;
+      color: #1058d0;
       text-decoration: underline;
     }
 
     #loader {
       position: fixed;
-      left: 0px;
-      top: 0px;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
       z-index: 9999;
-      background-image: url("data:image/svg+xml, %3Csvg xmlns='http://www.w3.org/2000/svg' viewbox='0 0 50 50'%3E%3Cpath d='M36.708,25c0-6.466-5.241-11.708-11.708-11.708c-6.466,0-11.709,5.243-11.709,11.708l0,0v0c0,1.11,0.901,2.012,2.012,2.012 S17.315,26.11,17.315,25c0-0.055-0.012-0.107-0.016-0.161c0.086-4.176,3.504-7.548,7.701-7.548c4.195,0,7.613,3.372,7.7,7.547 c-0.005,0.054-0.017,0.106-0.017,0.162c0,1.11,0.9,2.012,2.012,2.012S36.708,26.11,36.708,25L36.708,25L36.708,25z'%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 25 25' to='360 25 25' dur='0.5s' begin='0s' repeatCount='indefinite'/%3E%3C/path%3E%3Cpath d='M43.407,25c0-10.166-8.24-18.407-18.407-18.407C14.834,6.592,6.593,14.834,6.592,25l0,0v0c0,1.11,0.901,2.012,2.012,2.012 S10.617,26.11,10.617,25c0-0.055-0.012-0.107-0.016-0.161C10.688,16.969,17.11,10.592,25,10.592c7.89,0,14.312,6.377,14.399,14.246 c-0.005,0.054-0.017,0.106-0.017,0.162c0,1.11,0.9,2.012,2.012,2.012S43.407,26.11,43.407,25L43.407,25L43.407,25z'%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 25 25' to='360 25 25' dur='1.7s' begin='0.1s' repeatCount='indefinite'/%3E%3C/path%3E%3Cpath d='M50,25C50,11.193,38.807,0,25,0C11.318,0,0.21,10.992,0.009,24.625C-0.014,24.747-0.028,24.872-0.028,25 c0,1.11,0.901,2.012,2.012,2.012S3.996,26.11,3.996,25v0H4C4,13.42,13.42,4,25,4c11.524,0,20.904,9.334,20.992,20.838 c-0.005,0.054-0.017,0.106-0.017,0.162c0,1.11,0.9,2.012,2.012,2.012S50,26.11,50,25L50,25L50,25z'%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 25 25' to='360 25 25' dur='3s' begin='0.2s' repeatCount='indefinite'/%3E%3C/path%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-size: 10rem;
-      background-position: center;
       background-color: white;
+    }
+
+    #loader div {
+      padding: 0;
+      margin: 0;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      -webkit-transform: translate(-50%, -50%);
+      -ms-transform: translate(-50%, -50%);
+      transform: translate(-50%, -50%);
     }
 
     .sort-table {
       cursor: pointer;
       -webkit-user-select: none;
       -ms-user-select: none;
+      -moz-user-select: none;
       user-select: none;
-      color: #00415a;
+      color: #0e3577;
+      display: inline-block;
+      white-space: nowrap;
     }
 
     .sort-table:hover {
-      color: #008dc5;
+      color: #1058d0;
     }
 
     .forward.sort-table {
-      color: #008dc5;
+      color: #1058d0;
     }
 
     .reverse.sort-table {
-      color: #008dc5;
+      color: #1058d0;
     }
 
     .arrow {
-      max-width: 16px;
-      max-height: 16px;
-      height: 2ch;
-      width: auto;
+      height: 1rem;
+      height: 1rem;
       vertical-align: middle;
       content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg data-name='Layer 2'%3E%3Cg data-name='arrow-downward'%3E%3Crect transform='rotate(-90 12 12)' opacity='0'/%3E%3Cpath d='M12 17a1.72 1.72 0 0 1-1.33-.64l-4.21-5.1a2.1 2.1 0 0 1-.26-2.21A1.76 1.76 0 0 1 7.79 8h8.42a1.76 1.76 0 0 1 1.59 1.05 2.1 2.1 0 0 1-.26 2.21l-4.21 5.1A1.72 1.72 0 0 1 12 17z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     }
@@ -149,12 +233,24 @@
     }
 
     .pagination-wrapper {
+      display: -webkit-inline-box;
+      display: -ms-inline-flexbox;
       display: inline-flex;
+      margin-top: .25rem;
+      margin-bottom: .25rem;
     }
 
     .pagination-wrapper button {
       margin-left: .25rem;
       margin-right: .25rem;
+    }
+
+    .pagination-wrapper button.btn:first-child {
+      margin-left: 0;
+    }
+
+    .pages-wrapper {
+      margin: auto 0;
     }
 
     .goto-page {
@@ -164,123 +260,154 @@
       text-align: center;
       border: none;
       background-color: transparent;
-      color: #00415a;
+      color: #0e3577;
       cursor: pointer;
     }
 
     .goto-page:hover {
-      color: #008dc5;
+      color: #1058d0;
       text-decoration: underline;
     }
 
     .goto-page.current-page {
-      color: #008dc5;
+      color: #1058d0;
       text-decoration: underline;
     }
 
     .hidden {
       display: none;
     }
+
+    @media (min-width: 1300px) {
+      .open-path {
+        max-width: 16rem;
+      }
+    }
   </style>
 </head>
 
 <body>
   <main id="app">
-    <div id="loader" class="hidden"></div>
+    <div id="loader" class="hidden">
+      <div>
+        <svg version="1.1" id="L7" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+          viewBox="0 0 100 100" xml:space="preserve">
+          <path fill="black" d="M31.6,3.5C5.9,13.6-6.6,42.7,3.5,68.4c10.1,25.7,39.2,38.3,64.9,28.1l-3.1-7.9c-21.3,8.4-45.4-2-53.8-23.3
+           c-8.4-21.3,2-45.4,23.3-53.8L31.6,3.5z">
+            <animateTransform attributeName="transform" attributeType="XML" type="rotate" dur="2s" from="0 50 50"
+              to="360 50 50" repeatCount="indefinite"></animateTransform>
+          </path>
+          <path fill="black" d="M42.3,39.6c5.7-4.3,13.9-3.1,18.1,2.7c4.3,5.7,3.1,13.9-2.7,18.1l4.1,5.5c8.8-6.5,10.6-19,4.1-27.7
+           c-6.5-8.8-19-10.6-27.7-4.1L42.3,39.6z">
+            <animateTransform attributeName="transform" attributeType="XML" type="rotate" dur="1s" from="0 50 50"
+              to="-360 50 50" repeatCount="indefinite"></animateTransform>
+          </path>
+          <path fill="black" d="M82,35.7C74.1,18,53.4,10.1,35.7,18S10.1,46.6,18,64.3l7.6-3.4c-6-13.5,0-29.3,13.5-35.3s29.3,0,35.3,13.5
+           L82,35.7z">
+            <animateTransform attributeName="transform" attributeType="XML" type="rotate" dur="2s" from="0 50 50"
+              to="360 50 50" repeatCount="indefinite"></animateTransform>
+          </path>
+        </svg>
+        <p style="margin-top: 1rem; font-weight: bold;">Идет загрузка...</p>
+      </div>
+    </div>
     <h1>Таблица отчетности по Лидам за период</h1>
     <div class="wrapper form-wrapper">
       <h2>Дата создания лида</h2>
       <form autocomplete="off" id="search">
-        <label>
-          От
+        <div class="input-wrapper">
+          <label for="start">От:</label>
           <input class="data-picker" autocomplete="false" type="text" name="start" required readonly>
-        </label>
-        <label>
-          До
+        </div>
+        <div class="input-wrapper">
+          <label for="end">До:</label>
           <input class="data-picker" autocomplete="false" type="text" name="end" required readonly>
-        </label>
-        <button type="submit">Найти</button>
+        </div>
+        <div class="input-wrapper">
+          <button class="btn" type="submit">Найти</button>
+        </div>
       </form>
     </div>
     <div class="wrapper info-wrapper">
       Найдено лидов: <span id="info_block">0 шт.</span>
     </div>
-    <div class="wrapper pagination-wrapper hidden">
-      <button class="first-page">Первая</button>
-      <button class="prev-page">Предыдущая</button>
-      <div class="pages_wrapper"></div>
-      <button class="next-page">Следующая</button>
-      <button class="last-page">Последняя</button>
-    </div>
-    <div class="wrapper table-wrapper">
-      <table id="report">
-        <thead>
-          <tr>
-            <th>
-              <div class="sort-table" sort-target="user.name" sort-type="string">Ответственный
-                <img class="arrow">
-              </div>
-            </th>
-            <th>
-              <div class="sort-table" sort-target="lead.title" sort-type="string">Название
-                <img class="arrow">
-              </div>
-            </th>
-            <th>
-              <div class="sort-table forward" sort-target="lead.id" sort-type="integer">Номер
-                <img class="arrow">
-              </div>
-            </th>
-            <th>
-              <div class="sort-table" sort-target="lead.status" sort-type="string">Cтатус
-                <img class="arrow">
-              </div>
-            </th>
-            <th>
-              <div class="sort-table" sort-target="lead.source" sort-type="string">Источник
-                <img class="arrow">
-              </div>
-            </th>
-            <th>
-              <div class="sort-table" sort-target="lead.date_create" sort-type="date">Дата создания
-                <img class="arrow">
-              </div>
-            </th>
-            <th>
-              <div class="sort-table" sort-target="lead.date_modify" sort-type="date">Дата изменения
-                <img class="arrow">
-              </div>
-            </th>
-            <th>
-              <div class="sort-table" sort-target="lead.date_close" sort-type="date">Дата закрытия
-                <img class="arrow">
-              </div>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Пользователь</td>
-            <td>Задача</td>
-            <td class="text-centered">0</td>
-            <td>завершена</td>
-            <td>Звонок</td>
-            <td>01.01.2022</td>
-            <td>01.01.2022</td>
-            <td>01.01.2022</td>
-          </tr>
-        </tbody>
-        <tfoot>
-        </tfoot>
-      </table>
-    </div>
-    <div class="wrapper pagination-wrapper hidden">
-      <button class="first-page">Первая</button>
-      <button class="prev-page">Предыдущая</button>
-      <div class="pages_wrapper">
+    <div class="wrapper content-wrapper">
+      <div class="wrapper pagination-wrapper hidden">
+        <button class="first-page btn">&lt;&lt;</button>
+        <button class="prev-page btn">&lt;</button>
+        <div class="pages-wrapper"></div>
+        <button class="next-page btn">&gt;</button>
+        <button class="last-page btn">&gt;&gt;</button>
       </div>
-      <button class="next-page">Следующая</button>
-      <button class="last-page">Последняя</button>
+      <div class="wrapper table-wrapper">
+        <table id="report">
+          <thead>
+            <tr>
+              <th>
+                <div class="sort-table" sort-target="user.name" sort-type="string">Ответственный
+                  <img class="arrow">
+                </div>
+              </th>
+              <th>
+                <div class="sort-table" sort-target="lead.title" sort-type="string">Название
+                  <img class="arrow">
+                </div>
+              </th>
+              <th>
+                <div class="sort-table forward" sort-target="lead.id" sort-type="integer">Номер
+                  <img class="arrow">
+                </div>
+              </th>
+              <th>
+                <div class="sort-table" sort-target="lead.status" sort-type="string">Cтатус
+                  <img class="arrow">
+                </div>
+              </th>
+              <th>
+                <div class="sort-table" sort-target="lead.source" sort-type="string">Источник
+                  <img class="arrow">
+                </div>
+              </th>
+              <th>
+                <div class="sort-table" sort-target="lead.date_create" sort-type="date">Дата создания
+                  <img class="arrow">
+                </div>
+              </th>
+              <th>
+                <div class="sort-table" sort-target="lead.date_modify" sort-type="date">Дата изменения
+                  <img class="arrow">
+                </div>
+              </th>
+              <th>
+                <div class="sort-table" sort-target="lead.date_close" sort-type="date">Дата закрытия
+                  <img class="arrow">
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Пользователь</td>
+              <td>Задача</td>
+              <td class="text-centered">0</td>
+              <td>завершена</td>
+              <td>Звонок</td>
+              <td>01.01.2022</td>
+              <td>01.01.2022</td>
+              <td>01.01.2022</td>
+            </tr>
+          </tbody>
+          <tfoot>
+          </tfoot>
+        </table>
+      </div>
+      <div class="wrapper pagination-wrapper hidden">
+        <button class="first-page btn">&lt;&lt;</button>
+        <button class="prev-page btn">&lt;</button>
+        <div class="pages-wrapper"></div>
+        <button class="next-page btn">&gt;</button>
+        <button class="last-page btn">&gt;&gt;</button>
+      </div>
     </div>
   </main>
   <script>
@@ -428,7 +555,7 @@
           photo: e.PERSONAL_PHOTO || 'https://dveri-bambit.bitrix24.ru/bitrix/js/ui/icons/b24/images/ui-user.svg?v2',
         }));
         let table = leads_data.map(e => ({
-          user: users_data.find(u => u.id == e.ASSIGNED_BY_ID) || { name: 'Пользователь не найден', id: -1, photo: 'https://dveri-bambit.bitrix24.ru/bitrix/js/ui/icons/b24/images/ui-user.svg?v2' },
+          user: users_data.find(u => u.id == e.ASSIGNED_BY_ID) || { name: 'Не найден', id: -1, photo: 'https://dveri-bambit.bitrix24.ru/bitrix/js/ui/icons/b24/images/ui-user.svg?v2' },
           lead: {
             id: e.ID,
             title: e.TITLE,
@@ -494,13 +621,17 @@
 
       const createPagesButtons = function () {
         const step_size = 4;
-        $('.pages_wrapper').empty();
+        $('.pages-wrapper').empty();
         let local_page = page, start_offset = 0, end_offset = 0;
         if (pages_obj.length - (local_page + step_size + 1) < 0) start_offset = -(pages_obj.length - (local_page + step_size + 1));
         if (local_page - step_size < 0) end_offset = -(local_page - step_size);
         for (let i = Math.max(0, page - step_size - start_offset); i <= Math.min(pages_obj.length - 1, local_page + step_size + end_offset); i++) {
-          $('.pages_wrapper').append(`<button class="goto-page ${i == page ? 'current-page' : ''}" page="${i}">${i + 1}</button>`);
+          $('.pages-wrapper').append(`<button class="goto-page ${i == page ? 'current-page' : ''}" page="${i}">${i + 1}</button>`);
         }
+        $('.next-page').prop('disabled', page === pages_obj.length - 1);
+        $('.prev-page').prop('disabled', page === 0);
+        $('.last-page').prop('disabled', page === pages_obj.length - 1);
+        $('.first-page').prop('disabled', page === 0);
 
         $('.goto-page').click(function () {
           let local_page = $(this).attr('page');
