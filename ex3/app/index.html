@@ -9,288 +9,11 @@
   <script src="https://code.jquery.com/jquery-3.6.1.min.js"
     integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/air-datepicker@3.3.1/air-datepicker.min.js"></script>
+
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/air-datepicker@3.3.1/air-datepicker.css">
+  <link rel="stylesheet" href="style.css">
   <title>app</title>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-    }
-
-    * {
-      font-family: Arial, Helvetica, sans-serif !important;
-    }
-
-    input {
-      padding-top: .5rem;
-      padding-bottom: .5rem;
-      padding-left: 1rem;
-      padding-right: 1rem;
-      width: 10ch;
-      border: 1px solid;
-      border-radius: 3px;
-      border-color: lightslategrey;
-    }
-
-    label,
-    input {
-      display: -webkit-box;
-      display: -ms-flexbox;
-      display: flex;
-      -webkit-box-orient: vertical;
-      -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-      flex-direction: column;
-    }
-
-    form {
-      display: -webkit-box;
-      display: -ms-flexbox;
-      display: flex;
-    }
-
-    .input-wrapper {
-      margin: auto 1rem 0 0;
-    }
-
-    button.btn {
-      padding-top: .5rem;
-      padding-bottom: .5rem;
-      padding-left: 1rem;
-      padding-right: 1rem;
-      border: 1px solid;
-      border-color: #0e3577;
-      background-color: #0e3577;
-      border-radius: 3px;
-      color: white;
-      cursor: pointer;
-    }
-
-    button.btn:hover {
-      border-color: #1058d0;
-      background-color: #1058d0;
-    }
-
-    button.btn:disabled,
-    button.btn[disabled] {
-      border-color: #7a7a7a;
-      background-color: #7a7a7a;
-      color: black;
-      cursor: not-allowed;
-    }
-
-    .wrapper {
-      margin-top: 1rem;
-      margin-bottom: 1rem;
-      width: 100%;
-    }
-
-    .table-wrapper table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .table-wrapper {
-      margin: 0;
-    }
-
-    .info-wrapper {
-      margin: 0;
-    }
-
-    table,
-    th,
-    td {
-      border: 1px solid;
-      border-color: lightslategrey;
-    }
-
-
-    th,
-    td {
-      padding-left: .15rem;
-      padding-right: .15rem;
-    }
-
-    th {
-      padding-top: .5rem;
-      padding-bottom: .5rem;
-    }
-
-    th:hover {
-      background-color: rgba(0, 0, 0, .15);
-    }
-
-    td:hover {
-      background-color: rgba(0, 0, 0, .1);
-    }
-
-    tbody tr:hover {
-      background-color: rgba(0, 0, 0, .05);
-    }
-
-    .text-centered {
-      text-align: center;
-    }
-
-    .avatar {
-      height: 2rem;
-      width: 2rem;
-      background-color: black;
-      border-radius: 50%;
-      vertical-align: middle;
-    }
-
-    .open-path {
-      max-width: 10rem;
-      -o-text-overflow: ellipsis;
-      text-overflow: ellipsis;
-      overflow: hidden;
-      cursor: pointer;
-      color: #0e3577;
-      display: inline-block;
-      white-space: nowrap;
-      vertical-align: middle;
-    }
-
-    .open-path:hover {
-      color: #1058d0;
-      text-decoration: underline;
-    }
-
-    #loader {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 9999;
-      background-color: white;
-    }
-
-    #loader div {
-      padding: 0;
-      margin: 0;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      -webkit-transform: translate(-50%, -50%);
-      -ms-transform: translate(-50%, -50%);
-      transform: translate(-50%, -50%);
-    }
-
-    .sort-table {
-      cursor: pointer;
-      -webkit-user-select: none;
-      -ms-user-select: none;
-      -moz-user-select: none;
-      user-select: none;
-      color: #0e3577;
-      display: inline-block;
-      white-space: nowrap;
-    }
-
-    .sort-table:hover {
-      color: #1058d0;
-    }
-
-    .forward.sort-table {
-      color: #1058d0;
-    }
-
-    .reverse.sort-table {
-      color: #1058d0;
-    }
-
-    .arrow {
-      height: 1rem;
-      height: 1rem;
-      vertical-align: middle;
-      content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg data-name='Layer 2'%3E%3Cg data-name='arrow-downward'%3E%3Crect transform='rotate(-90 12 12)' opacity='0'/%3E%3Cpath d='M12 17a1.72 1.72 0 0 1-1.33-.64l-4.21-5.1a2.1 2.1 0 0 1-.26-2.21A1.76 1.76 0 0 1 7.79 8h8.42a1.76 1.76 0 0 1 1.59 1.05 2.1 2.1 0 0 1-.26 2.21l-4.21 5.1A1.72 1.72 0 0 1 12 17z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    }
-
-    .sort-table .arrow {
-      visibility: hidden;
-    }
-
-    .sort-table:hover .arrow {
-      visibility: visible;
-    }
-
-    .forward.sort-table .arrow {
-      content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg data-name='Layer 2'%3E%3Cg data-name='arrow-downward'%3E%3Crect transform='rotate(-90 12 12)' opacity='0'/%3E%3Cpath d='M12 17a1.72 1.72 0 0 1-1.33-.64l-4.21-5.1a2.1 2.1 0 0 1-.26-2.21A1.76 1.76 0 0 1 7.79 8h8.42a1.76 1.76 0 0 1 1.59 1.05 2.1 2.1 0 0 1-.26 2.21l-4.21 5.1A1.72 1.72 0 0 1 12 17z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    }
-
-    .reverse.sort-table .arrow {
-      content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg data-name='Layer 2'%3E%3Cg data-name='arrow-up'%3E%3Crect transform='rotate(90 12 12)' opacity='0'/%3E%3Cpath d='M16.21 16H7.79a1.76 1.76 0 0 1-1.59-1 2.1 2.1 0 0 1 .26-2.21l4.21-5.1a1.76 1.76 0 0 1 2.66 0l4.21 5.1A2.1 2.1 0 0 1 17.8 15a1.76 1.76 0 0 1-1.59 1z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    }
-
-    .forward.sort-table .arrow {
-      visibility: visible;
-    }
-
-    .reverse.sort-table .arrow {
-      visibility: visible;
-    }
-
-    .pagination-wrapper {
-      display: -webkit-inline-box;
-      display: -ms-inline-flexbox;
-      display: inline-flex;
-      margin-top: .25rem;
-      margin-bottom: .25rem;
-    }
-
-    .pagination-wrapper button {
-      margin-left: .25rem;
-      margin-right: .25rem;
-    }
-
-    .pagination-wrapper button.btn:first-child {
-      margin-left: 0;
-    }
-
-    .pages-wrapper {
-      margin: auto 0;
-    }
-
-    .goto-page {
-      width: 3ch;
-      height: 3ch;
-      vertical-align: middle;
-      text-align: center;
-      border: none;
-      background-color: transparent;
-      color: #0e3577;
-      cursor: pointer;
-    }
-
-    .goto-page:hover {
-      color: #1058d0;
-      text-decoration: underline;
-    }
-
-    .goto-page.current-page {
-      color: #1058d0;
-      text-decoration: underline;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    @media (min-width: 1200px) {
-      .open-path {
-        max-width: 16rem;
-      }
-    }
-
-    @media (min-width: 1400px) {
-      .open-path {
-        max-width: 24rem;
-      }
-    }
   </style>
 </head>
 
@@ -298,8 +21,8 @@
   <main id="app">
     <div id="loader" class="hidden">
       <div style="display: flex; flex-direction: column;">
-        <svg style="width: 5rem; height: auto;" version="1.1" id="L7" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-          viewBox="0 0 100 100" xml:space="preserve">
+        <svg style="width: 5rem; height: auto;" version="1.1" id="L7" xmlns="http://www.w3.org/2000/svg"
+          xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100" xml:space="preserve">
           <path fill="black" d="M31.6,3.5C5.9,13.6-6.6,42.7,3.5,68.4c10.1,25.7,39.2,38.3,64.9,28.1l-3.1-7.9c-21.3,8.4-45.4-2-53.8-23.3
            c-8.4-21.3,2-45.4,23.3-53.8L31.6,3.5z">
             <animateTransform attributeName="transform" attributeType="XML" type="rotate" dur="2s" from="0 50 50"
@@ -316,7 +39,8 @@
               to="360 50 50" repeatCount="indefinite"></animateTransform>
           </path>
         </svg>
-        <p style="margin-top: 1rem; font-weight: bold; text-align: center;"><span class="get-count">0</span>/<span class="total-count"></span></p>
+        <p style="margin-top: 1rem; font-weight: bold; text-align: center;"><span class="get-count">0</span>/<span
+            class="total-count"></span></p>
       </div>
     </div>
     <h2>Таблица отчетности по Лидам за период</h2>
@@ -423,6 +147,7 @@
     let pages_obj;
     let users_obj;
     let page = 0;
+    
     const TIMEOUT = 500;
     const BX24Client = {
       call: function (method, params) {
@@ -481,30 +206,10 @@
         new Date().toLocaleString('en-US', { timeZone: 'Europe/Moscow' })
       );
     }
+    BX24.init(BX24.getAuth());
+    BX24.resizeWindow($("#app").width(), $("#app").height(), (result) => { BX24.fitWindow() });
 
     $(document).ready(async function () {
-
-      const updateInfoBlock = async function () {
-        let start = $('#search').serializeArray().find(e => e.name === 'start'),
-          end = $('#search').serializeArray().find(e => e.name === 'end');
-
-        //validate
-        if (isNaN(Date.parse(start.value)) || isNaN(Date.parse(end.value))) return;
-        if (new Date(start.value).getTime() > new Date(end.value).getTime()) return;
-
-        $('span.total-count').text('ожидание...');
-
-        let local_res = await BX24Client.call(
-          'crm.lead.list',
-          {
-            order: { 'ID': 'ASC' },
-            filter: { '>DATE_CREATE': start.value + 'T00:00:00', '<DATE_CREATE': end.value + 'T23:59:59' },
-            select: ['ID'],
-          }
-        );
-
-        $('span.total-count').text(local_res.total());
-      }
 
       const status_res = await BX24Client.callBatch([
         {
@@ -529,6 +234,28 @@
         const source_list = status_res[1].data();
         let f = source_list.find(e => e.STATUS_ID == id);
         if (f) return f.NAME;
+      }
+
+      const updateInfoBlock = async function () {
+        let start = $('#search').serializeArray().find(e => e.name === 'start'),
+          end = $('#search').serializeArray().find(e => e.name === 'end');
+
+        //validate
+        if (isNaN(Date.parse(start.value)) || isNaN(Date.parse(end.value))) return;
+        if (new Date(start.value).getTime() > new Date(end.value).getTime()) return;
+
+        $('span.total-count').text('ожидание...');
+
+        let local_res = await BX24Client.call(
+          'crm.lead.list',
+          {
+            order: { 'ID': 'ASC' },
+            filter: { '>DATE_CREATE': start.value + 'T00:00:00', '<DATE_CREATE': end.value + 'T23:59:59' },
+            select: ['ID'],
+          }
+        );
+
+        $('span.total-count').text(local_res.total());
       }
 
       const createListeners = function () {
@@ -586,8 +313,8 @@
         $("#report tbody").empty();
         for (let data of table) {
           try {
-            $("#report tbody").append(`
-              <tr>
+            $("#report tbody").append(
+              `<tr>
                 <td>
                   <div ${data.user.id !== -1 ? 'class="open-path" path="/company/personal/user/' + data.user.id + '/"' : ''}>
                     <img class="avatar"
@@ -610,8 +337,8 @@
                 <td>${data.lead.date_create !== 1 ? new Date(data.lead.date_create).toLocaleDateString('ru-RU') : ''}</td>
                 <td>${data.lead.date_modify !== 1 ? new Date(data.lead.date_modify).toLocaleDateString('ru-RU') : ''}</td>
                 <td>${data.lead.date_close !== 1 ? new Date(data.lead.date_close).toLocaleDateString('ru-RU') : ''}</td>
-              </tr>
-            `)
+              </tr>`
+            );
           } catch (e) {
             console.error('Bad data in table: ');
             console.error(data);
@@ -649,11 +376,9 @@
           createPagesButtons();
         });
       }
-
       /*
       * Работа с DOM деревом
       */
-
       let startDatePicker = new AirDatepicker('#search input[name="start"]', {
         minDate: new Date(1),
         dateFormat(date) {
@@ -772,9 +497,6 @@
         createPagesButtons();
       })
     });
-
-    BX24.init(BX24.getAuth());
-    BX24.resizeWindow($("#app").width(), $("#app").height(), (result) => { BX24.fitWindow() });
   </script>
 </body>
 
