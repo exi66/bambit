@@ -12,23 +12,75 @@
   <link rel="stylesheet" href="https://dev.bambit.ru/burul/resources/bootstrap/css/bootstrap.min.css">
 </head>
 
-<body>
-  <div class="p-4">
+<body class="container-fluid">
+  <div class="p-4 row">
     <h1>Списать время</h1>
-    <div class="mt-4">
-      Начальная дата: <input id="start_date" type="date" class="btn btn-light border"> 
-      Конечная: <input id="end_date" type="date" class="btn btn-light border">
-      <button id="test" type="button" class="btn btn-primary">Запустить</button>
+    <div class="col-auto">
+      <form id="test" class="row">
+        <div class="col-12 mt-2">
+          <div class="row">
+            <div class="col-3">
+              <label for="start_date" class="form-label">Начальная дата:</label>
+              <input name="start_date" type="date" class="form-control" required>
+            </div>
+            <div class="col-3">
+              <label for="end_date" class="form-label">Конечная:</label>
+              <input name="end_date" type="date" class="form-control" required>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 mt-2">
+          <div class="row">
+            <div class="col-3">
+              <label for="min_hour">Мин. кол-во часов:</label>
+              <input type="number" min="1" max="24" class="form-control" name="min_hour" value="1" required>
+            </div>
+            <div class="col-3">
+              <label for="max_hour">Макс. кол-во часов:</label>
+              <input type="number" min="1" max="24" class="form-control" name="max_hour" value="5" required>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 mt-2">
+          <div class="row">
+            <div class="col-6">
+              <label for="comments">Комментарии (разделенные ";"):</label>
+              <input type="text" class="form-control" name="comments" required>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 mt-2">
+          <div class="row">
+            <div class="col-6">
+              <label for="comments">Задачи (id, разделенные ";"): </label>
+              <input type="text" class="form-control" name="tasks" required disabled>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 mt-2">
+          <div class="row">
+            <div class="col-6">
+              <label for="users">Пользователи:</label>
+              <select name="users" class="form-select" size="16" multiple>
+
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 mt-2">
+          <button type="submit" class="btn btn-primary">Запустить</button>
+        </div>
+      </form>
     </div>
-    <div class="mt-2">
+    <div class="col-12 mt-2">
       <span id="status" class="badge text-bg-secondary">Пользователь 0/0</span>
       <span id="status2" class="badge text-bg-secondary">Запрос 0/0</span>
     </div>
   </div>
   <script>
-    const tasks = [51144, 51146, 51148];
-    const comments = ['рандомный', 'комментарий', 'к списанному', 'времени'];
-    
+    const TASKS = [51144, 51146, 51148];
+    const COMMENTS = ['рандомный', 'комментарий', 'к списанному', 'времени'];
+
     const BX24Client = new BX24Wrapper();
 
     const getRandomItem = function (arr) {
@@ -48,38 +100,78 @@
       return part >= 10 ? part.toString() : '0' + part.toString();
     };
 
-    $(document).ready(function () {
+    $(document).ready(async function () {
+
+      let users_res = await BX24Client.call('user.get', {});
+      let users_obj = users_res.data();
+      while (users_res.more()) {
+        users_res = await BX24Client.next(users_res);
+        users_obj = users_obj.concat(users_res.data());
+      }
+
+      let selectUsers = $('select[name="users"]');
+      for (let user of users_obj) {
+        selectUsers.append(`
+          <option selected value='${user.ID}'>
+            ${user.NAME && user.LAST_NAME ? user.NAME + ' ' + user.LAST_NAME : 'Нет имени'} (id: ${user.ID})
+          </option>
+        `);
+      }
 
       //костыль разных таймзон сервера и клиента
       let now = new Date(
         new Date().toLocaleString('en-US', { timeZone: 'Europe/Moscow' })
       );
+      let datePickerStart = $('input[name="start_date"]');
+      let datePickerEnd = $('input[name="end_date"]');
+      datePickerStart.on('input', function () {
+        datePickerEnd.attr('min', $(this).val());
+      });
+      datePickerEnd.on('input', function () {
+        datePickerStart.attr('max', $(this).val());
+      });
+      datePickerEnd.attr('max', `${now.getFullYear()}-${('0' + (now.getMonth() + 1)).slice(-2)}-${('0' + now.getDate()).slice(-2)}`);
+      datePickerEnd.attr('min', `${now.getFullYear()}-${('0' + (now.getMonth() + 1)).slice(-2)}-01`);
+      datePickerEnd.val(`${now.getFullYear()}-${('0' + (now.getMonth() + 1)).slice(-2)}-${('0' + now.getDate()).slice(-2)}`);
+      datePickerStart.val(`${now.getFullYear()}-${('0' + (now.getMonth() + 1)).slice(-2)}-01`);
+      datePickerStart.attr('max', `${now.getFullYear()}-${('0' + (now.getMonth() + 1)).slice(-2)}-${('0' + now.getDate()).slice(-2)}`);
 
-      $('#start_date').attr('max', `${now.getFullYear()}-${('0' + (now.getMonth() + 1)).slice(-2)}-${('0' + now.getDate()).slice(-2)}`);
-      $('#start_date').val(`${now.getFullYear()}-${('0' + (now.getMonth() + 1)).slice(-2)}-01`);
-      $('#end_date').attr('max', `${now.getFullYear()}-${('0' + (now.getMonth() + 1)).slice(-2)}-${('0' + now.getDate()).slice(-2)}`);
-      $('#end_date').val(`${now.getFullYear()}-${('0' + (now.getMonth() + 1)).slice(-2)}-${('0' + now.getDate()).slice(-2)}`);
+      let houtPickerMin = $('input[name="min_hour"]');
+      let houtPickerMax = $('input[name="max_hour"]');
+      houtPickerMin.on('input', function () {
+        houtPickerMax.attr('min', $(this).val());
+      });
+      houtPickerMax.on('input', function () {
+        houtPickerMin.attr('max', $(this).val());
+      });
 
-      $('#test').click(async function () {
-        $(this).prop('disabled', true);
+      let tasksInput = $('input[name="tasks"]');
+      tasksInput.val(TASKS.join(';'));
 
-        let end_date = new Date($('#end_date').val()), start_date = new Date($('#start_date').val());
-        if (start_date.getTime() > end_date.getTime()) return console.error('Start date cannot be > end date!');
+      let commentsInput = $('input[name="comments"]');
+      commentsInput.val(COMMENTS.join(';'));
 
-        let res = await BX24Client.call('user.get', {});
-        const users = res.data();
+      $('#test').on('submit', async function (e) {
+        e.preventDefault();
+        $(this).find('input[type="sumbit"]').prop('disabled', true);
+
+        const start_date = new Date(datePickerStart.val());
+        const end_date = new Date(datePickerEnd.val());
+        const tasks = tasksInput.val().split(';').map(e => parseInt(e)) || TASKS;
+        const comments = commentsInput.val().split(';') || COMMENTS;
+
+        const users = selectUsers.val();
 
         let users_count = 1;
-
         for (let user of users) {
           /* 
           *  Минимальная визуализация прогресса выполнения
           */
           $('#status').text(`Пользователь: ${users_count}/${users.length}`);
           console.log(`==== USER #${users_count++} =====`);
-          let actions_count = 0;
+          let actions_count = 1;
 
-          for (let date = new Date(start_date.getTime()); date <= end_date; date.setDate(date.getDate() + 1)) {
+          for (let date = new Date(start_date); date <= end_date; date.setDate(date.getDate() + 1)) {
             if (date.getDay() !== 0 && date.getDay() !== 6) {
               /* 
               *  Минимальная визуализация прогресса выполнения
@@ -89,14 +181,14 @@
 
               let res = await BX24Client.call(
                 'task.elapseditem.add',
-                [getRandomItem(tasks), { SECONDS: getRandomInt(1, 5) * 60 * 60, COMMENT_TEXT: getRandomItem(comments), CREATED_DATE: date2str(date), USER_ID: parseInt(user.ID) }],
+                [getRandomItem(tasks), { SECONDS: getRandomInt(1, 5) * 60 * 60, COMMENT_TEXT: getRandomItem(comments), CREATED_DATE: date2str(date), USER_ID: parseInt(user) }],
               );
               console.log(res);
             }
           }
         }
-        $(this).prop('disabled', false);
-      });
+        $(this).find('input[type="sumbit"]').prop('disabled', false);
+      })
     });
 
     BX24.init(BX24.getAuth());
