@@ -15,58 +15,70 @@
   <button id="test">test</button>
   <span id="status"></span>
   <script>
-    const TIMEOUT = 500;
     const BX24Client = {
-      call: function (method, params) {
+      throttle: 2,
+      lastRequestTime: 0,
+      call: async function (method, params) {
+        await this.throttleCall();
         return new Promise((resolve, reject) => {
-          setTimeout(function () {
-            BX24.callMethod(method, params, (result) => {
-              if (result.error()) {
-                return reject({
-                  error: result.error(),
-                  method: method,
-                  params: params
-                });
-              }
-              resolve(result);
-            });
-          }, TIMEOUT);
+          BX24.callMethod(method, params, (result) => {
+            if (result.error()) {
+              return reject({
+                error: result.error(),
+                method: method,
+                params: params
+              });
+            }
+            resolve(result);
+          });
         });
       },
-      callBatch: function (calls, bHaltOnError = false) {
+      callBatch: async function (calls, bHaltOnError = false) {
+        await this.throttleCall();
         return new Promise((resolve, reject) => {
-          setTimeout(function () {
-            BX24.callBatch(calls, (result) => {
-              resolve(result);
-            }, bHaltOnError);
-          }, TIMEOUT);
+          BX24.callBatch(calls, (result) => {
+            resolve(result);
+          }, bHaltOnError);
         });
       },
-      next: function (result) {
+      next: async function (result) {
         if (!result.more()) {
           return null;
         }
+        await this.throttleCall();
         return new Promise((resolve, reject) => {
-          setTimeout(function () {
-            result.next((result) => {
-              if (result.error()) {
-                return reject({
-                  error: result.error(),
-                  method: method,
-                  params: params
-                });
-              }
-              resolve(result);
-            });
-          }, TIMEOUT);
+          result.next((result) => {
+            if (result.error()) {
+              return reject({
+                error: result.error(),
+                method: method,
+                params: params
+              });
+            }
+            resolve(result);
+          });
+        });
+      },
+      throttleCall: function () {
+        return new Promise(resolve => {
+          let timeout = Math.round(this.lastRequestTime + 1e3 * (1 / this.throttle) - Date.now());
+          if (timeout <= 0) {
+            this.lastRequestTime = Date.now();
+            return resolve();
+          }
+          setTimeout(() => {
+            this.lastRequestTime = Date.now();
+            return resolve();
+          }, timeout);
         });
       }
     };
 
     $(document).ready(function () {
       $('#test').click(async function () {
+        $(this).prop('disabled', true);
         let res = await BX24Client.call('tasks.task.list', {
-          filter: { TITLE: '123', RESPONSIBLE_LAST_NAME: 18 }, select: ['ID'], order: { CREATED_DATE: 'asc' }
+          filter: { TITLE: '123', RESPONSIBLE_ID: 18 }, select: ['ID'], order: { CREATED_DATE: 'asc' }
         });
         for (let count = 0; count < 12500 / 50; count++) {
           let tasks = res.data().tasks;

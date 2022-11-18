@@ -147,51 +147,62 @@
     let pages_obj;
     let users_obj;
     let page = 0;
-    
-    const TIMEOUT = 500;
+
     const BX24Client = {
-      call: function (method, params) {
+      throttle: 2,
+      lastRequestTime: 0,
+      call: async function (method, params) {
+        await this.throttleCall();
         return new Promise((resolve, reject) => {
-          setTimeout(function () {
-            BX24.callMethod(method, params, (result) => {
-              if (result.error()) {
-                return reject({
-                  error: result.error(),
-                  method: method,
-                  params: params
-                });
-              }
-              resolve(result);
-            });
-          }, TIMEOUT);
+          BX24.callMethod(method, params, (result) => {
+            if (result.error()) {
+              return reject({
+                error: result.error(),
+                method: method,
+                params: params
+              });
+            }
+            resolve(result);
+          });
         });
       },
-      callBatch: function (calls, bHaltOnError = false) {
+      callBatch: async function (calls, bHaltOnError = false) {
+        await this.throttleCall();
         return new Promise((resolve, reject) => {
-          setTimeout(function () {
-            BX24.callBatch(calls, (result) => {
-              resolve(result);
-            }, bHaltOnError);
-          }, TIMEOUT);
+          BX24.callBatch(calls, (result) => {
+            resolve(result);
+          }, bHaltOnError);
         });
       },
-      next: function (result) {
+      next: async function (result) {
         if (!result.more()) {
           return null;
         }
+        await this.throttleCall();
         return new Promise((resolve, reject) => {
-          setTimeout(function () {
-            result.next((result) => {
-              if (result.error()) {
-                return reject({
-                  error: result.error(),
-                  method: method,
-                  params: params
-                });
-              }
-              resolve(result);
-            });
-          }, TIMEOUT);
+          result.next((result) => {
+            if (result.error()) {
+              return reject({
+                error: result.error(),
+                method: method,
+                params: params
+              });
+            }
+            resolve(result);
+          });
+        });
+      },
+      throttleCall: function () {
+        return new Promise(resolve => {
+          let timeout = Math.round(this.lastRequestTime + 1e3 * (1 / this.throttle) - Date.now());
+          if (timeout <= 0) {
+            this.lastRequestTime = Date.now();
+            return resolve();
+          }
+          setTimeout(() => {
+            this.lastRequestTime = Date.now();
+            return resolve();
+          }, timeout);
         });
       }
     };
@@ -272,6 +283,7 @@
             order: { 'ID': 'ASC' },
             filter: { '>DATE_CREATE': start_date + 'T00:00:00', '<DATE_CREATE': end_date + 'T23:59:59' },
             select: ['ASSIGNED_BY_ID', 'TITLE', 'ID', 'STATUS_ID', 'SOURCE_ID', 'DATE_CREATE', 'DATE_MODIFY', 'DATE_CLOSED'],
+            start: -1,
           }
         );
         let table = serializeRes(res.data(), users_obj);
