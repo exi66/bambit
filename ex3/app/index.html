@@ -6,15 +6,13 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="//api.bitrix24.com/api/v1/"></script>
-  <script src="https://code.jquery.com/jquery-3.6.1.min.js"
-    integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/air-datepicker@3.3.1/air-datepicker.min.js"></script>
+  <script src="https://dev.bambit.ru/burul/resources/js/jquery-3.6.1.min.js"></script>
+  <script src="https://dev.bambit.ru/burul/resources/js/bx-24-wrapper.js"></script>
+  <script src="./js/air-datepicker.min.js"></script>
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/air-datepicker@3.3.1/air-datepicker.css">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/air-datepicker.min.css">
   <title>app</title>
-  <style>
-  </style>
 </head>
 
 <body>
@@ -23,29 +21,32 @@
       <div style="display: flex; flex-direction: column;">
         <svg style="width: 5rem; height: auto;" version="1.1" id="L7" xmlns="http://www.w3.org/2000/svg"
           xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100" xml:space="preserve">
-          <path fill="black" d="M31.6,3.5C5.9,13.6-6.6,42.7,3.5,68.4c10.1,25.7,39.2,38.3,64.9,28.1l-3.1-7.9c-21.3,8.4-45.4-2-53.8-23.3
-           c-8.4-21.3,2-45.4,23.3-53.8L31.6,3.5z">
+          <path fill="black"
+            d="M31.6,3.5C5.9,13.6-6.6,42.7,3.5,68.4c10.1,25.7,39.2,38.3,64.9,28.1l-3.1-7.9c-21.3,8.4-45.4-2-53.8-23.3c-8.4-21.3,2-45.4,23.3-53.8L31.6,3.5z">
             <animateTransform attributeName="transform" attributeType="XML" type="rotate" dur="2s" from="0 50 50"
               to="360 50 50" repeatCount="indefinite"></animateTransform>
           </path>
-          <path fill="black" d="M42.3,39.6c5.7-4.3,13.9-3.1,18.1,2.7c4.3,5.7,3.1,13.9-2.7,18.1l4.1,5.5c8.8-6.5,10.6-19,4.1-27.7
-           c-6.5-8.8-19-10.6-27.7-4.1L42.3,39.6z">
+          <path fill="black"
+            d="M42.3,39.6c5.7-4.3,13.9-3.1,18.1,2.7c4.3,5.7,3.1,13.9-2.7,18.1l4.1,5.5c8.8-6.5,10.6-19,4.1-27.7c-6.5-8.8-19-10.6-27.7-4.1L42.3,39.6z">
             <animateTransform attributeName="transform" attributeType="XML" type="rotate" dur="1s" from="0 50 50"
               to="-360 50 50" repeatCount="indefinite"></animateTransform>
           </path>
-          <path fill="black" d="M82,35.7C74.1,18,53.4,10.1,35.7,18S10.1,46.6,18,64.3l7.6-3.4c-6-13.5,0-29.3,13.5-35.3s29.3,0,35.3,13.5
-           L82,35.7z">
+          <path fill="black"
+            d="M82,35.7C74.1,18,53.4,10.1,35.7,18S10.1,46.6,18,64.3l7.6-3.4c-6-13.5,0-29.3,13.5-35.3s29.3,0,35.3,13.5L82,35.7z">
             <animateTransform attributeName="transform" attributeType="XML" type="rotate" dur="2s" from="0 50 50"
               to="360 50 50" repeatCount="indefinite"></animateTransform>
           </path>
         </svg>
-        <p style="margin-top: 1rem; font-weight: bold; text-align: center;"><span class="get-count">0</span>/<span
-            class="total-count"></span></p>
+        <p style="margin-top: 1rem; font-weight: bold; text-align: center;">
+          <span class="get-count">0</span>
+          /
+          <span class="total-count"></span>
+        </p>
       </div>
     </div>
-    <h2>Таблица отчетности по Лидам за период</h2>
+    <h1>Таблица отчетности по Лидам за период</h1>
     <div class="wrapper form-wrapper">
-      <h3>Дата создания лида</h3>
+      <p style="font-weight: bold;">Дата создания лида</p>
       <form autocomplete="off" id="search">
         <div class="input-wrapper">
           <label for="start">От:</label>
@@ -60,7 +61,7 @@
         </div>
       </form>
       <div class="wrapper info-wrapper">
-        <h3>Найдено лидов: <span class="total-count">0</span></h3>
+        <p style="font-weight: bold;">Найдено лидов: <span class="total-count">0</span></p>
       </div>
     </div>
     <div class="wrapper content-wrapper">
@@ -76,42 +77,50 @@
           <thead>
             <tr>
               <th>
-                <div class="sort-table" sort-target="user.name" sort-type="string">Ответственный
+                <div class="sort-table" sort-target="user.name" sort-type="string">
+                  Ответственный
                   <img class="arrow">
                 </div>
               </th>
               <th>
-                <div class="sort-table" sort-target="lead.title" sort-type="string">Название
+                <div class="sort-table" sort-target="lead.title" sort-type="string">
+                  Название
                   <img class="arrow">
                 </div>
               </th>
               <th>
-                <div class="sort-table forward" sort-target="lead.id" sort-type="integer">Номер
+                <div class="sort-table forward" sort-target="lead.id" sort-type="integer">
+                  Номер
                   <img class="arrow">
                 </div>
               </th>
               <th>
-                <div class="sort-table" sort-target="lead.status" sort-type="string">Cтатус
+                <div class="sort-table" sort-target="lead.status" sort-type="string">
+                  Cтатус
                   <img class="arrow">
                 </div>
               </th>
               <th>
-                <div class="sort-table" sort-target="lead.source" sort-type="string">Источник
+                <div class="sort-table" sort-target="lead.source" sort-type="string">
+                  Источник
                   <img class="arrow">
                 </div>
               </th>
               <th>
-                <div class="sort-table" sort-target="lead.date_create" sort-type="date">Дата создания
+                <div class="sort-table" sort-target="lead.date_create" sort-type="date">
+                  Дата создания
                   <img class="arrow">
                 </div>
               </th>
               <th>
-                <div class="sort-table" sort-target="lead.date_modify" sort-type="date">Дата изменения
+                <div class="sort-table" sort-target="lead.date_modify" sort-type="date">
+                  Дата изменения
                   <img class="arrow">
                 </div>
               </th>
               <th>
-                <div class="sort-table" sort-target="lead.date_close" sort-type="date">Дата закрытия
+                <div class="sort-table" sort-target="lead.date_close" sort-type="date">
+                  Дата закрытия
                   <img class="arrow">
                 </div>
               </th>
@@ -148,64 +157,7 @@
     let users_obj;
     let page = 0;
 
-    const BX24Client = {
-      throttle: 2,
-      lastRequestTime: 0,
-      call: async function (method, params) {
-        await this.throttleCall();
-        return new Promise((resolve, reject) => {
-          BX24.callMethod(method, params, (result) => {
-            if (result.error()) {
-              return reject({
-                error: result.error(),
-                method: method,
-                params: params
-              });
-            }
-            resolve(result);
-          });
-        });
-      },
-      callBatch: async function (calls, bHaltOnError = false) {
-        await this.throttleCall();
-        return new Promise((resolve, reject) => {
-          BX24.callBatch(calls, (result) => {
-            resolve(result);
-          }, bHaltOnError);
-        });
-      },
-      next: async function (result) {
-        if (!result.more()) {
-          return null;
-        }
-        await this.throttleCall();
-        return new Promise((resolve, reject) => {
-          result.next((result) => {
-            if (result.error()) {
-              return reject({
-                error: result.error(),
-                method: method,
-                params: params
-              });
-            }
-            resolve(result);
-          });
-        });
-      },
-      throttleCall: function () {
-        return new Promise(resolve => {
-          let timeout = Math.round(this.lastRequestTime + 1e3 * (1 / this.throttle) - Date.now());
-          if (timeout <= 0) {
-            this.lastRequestTime = Date.now();
-            return resolve();
-          }
-          setTimeout(() => {
-            this.lastRequestTime = Date.now();
-            return resolve();
-          }, timeout);
-        });
-      }
-    };
+    const BX24Client = new BX24Wrapper();
     function date2str(d) {
       return d.getFullYear() + '-' + this.paddatepart(1 + d.getMonth()) + '-' + this.paddatepart(d.getDate());
     }

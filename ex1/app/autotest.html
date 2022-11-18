@@ -6,19 +6,19 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="//api.bitrix24.com/api/v1/"></script>
-  <script src="https://code.jquery.com/jquery-3.6.1.min.js"
-    integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
-    integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+  <script src="https://dev.bambit.ru/burul/resources/js/jquery-3.6.1.min.js"></script>
+  <script src="https://dev.bambit.ru/burul/resources/js/bx-24-wrapper.js"></script>
+  <link rel="stylesheet" href="https://dev.bambit.ru/burul/resources/bootstrap/css/bootstrap.min.css">
   <title>app</title>
 </head>
 
 <body class="container-fluid">
   <div class="row vh-100 p-4">
+    <h1>Генератор объектов</h1>
     <div class="col-6">
       <div class="row">
         <div id="lead" class="col-12 my-2">
-          <h4>Лиды</h4>
+          <h2>Лиды</h2>
           <button type="button" class="btn btn-outline-primary create-obj">Создать объект</button>
           <div class="d-none btn-group info-obj" role="group">
             <button type="button" path="" class="btn btn-outline-success details-obj">Созданный объект</button>
@@ -26,7 +26,7 @@
           </div>
         </div>
         <div id="company" class="col-12 my-2">
-          <h4>Компании</h4>
+          <h2>Компании</h2>
           <button type="button" class="btn btn-outline-primary create-obj">Создать объект</button>
           <div class="d-none btn-group info-obj" role="group">
             <button type="button" path="" class="btn btn-outline-success details-obj">Созданный объект</button>
@@ -34,7 +34,7 @@
           </div>
         </div>
         <div id="contact" class="col-12 my-2">
-          <h4>Контакты</h4>
+          <h2>Контакты</h2>
           <button type="button" class="btn btn-outline-primary create-obj">Создать объект</button>
           <div class="d-none btn-group info-obj" role="group">
             <button type="button" path="" class="btn btn-outline-success details-obj">Созданный объект</button>
@@ -42,7 +42,7 @@
           </div>
         </div>
         <div id="deal" class="col-12 my-2">
-          <h4>Сделки</h4>
+          <h2>Сделки</h2>
           <button type="button" class="btn btn-outline-primary create-obj">Создать объект</button>
           <div class="d-none btn-group info-obj" role="group">
             <button type="button" path="" class="btn btn-outline-success details-obj">Созданный объект</button>
@@ -50,7 +50,7 @@
           </div>
         </div>
         <div id="invoice" class="col-12 my-2">
-          <h4>Счета</h4>
+          <h2>Счета</h2>
           <button type="button" class="btn btn-outline-primary create-obj">Создать объект</button>
           <div class="d-none btn-group info-obj" role="group">
             <!--Внимательнее из-за особенности старых счетов здесь ссылка, а не кнопка-->
@@ -68,64 +68,7 @@
   <script>
     const MY_ID = 92;
 
-    const BX24Client = {
-      throttle: 2,
-      lastRequestTime: 0,
-      call: async function (method, params) {
-        await this.throttleCall();
-        return new Promise((resolve, reject) => {
-          BX24.callMethod(method, params, (result) => {
-            if (result.error()) {
-              return reject({
-                error: result.error(),
-                method: method,
-                params: params
-              });
-            }
-            resolve(result);
-          });
-        });
-      },
-      callBatch: async function (calls, bHaltOnError = false) {
-        await this.throttleCall();
-        return new Promise((resolve, reject) => {
-          BX24.callBatch(calls, (result) => {
-            resolve(result);
-          }, bHaltOnError);
-        });
-      },
-      next: async function (result) {
-        if (!result.more()) {
-          return null;
-        }
-        await this.throttleCall();
-        return new Promise((resolve, reject) => {
-          result.next((result) => {
-            if (result.error()) {
-              return reject({
-                error: result.error(),
-                method: method,
-                params: params
-              });
-            }
-            resolve(result);
-          });
-        });
-      },
-      throttleCall: function () {
-        return new Promise(resolve => {
-          let timeout = Math.round(this.lastRequestTime + 1e3 * (1 / this.throttle) - Date.now());
-          if (timeout <= 0) {
-            this.lastRequestTime = Date.now();
-            return resolve();
-          }
-          setTimeout(() => {
-            this.lastRequestTime = Date.now();
-            return resolve();
-          }, timeout);
-        });
-      }
-    };
+    const BX24Client = new BX24Wrapper();
     
     const RANDOM = {
       default: {
@@ -179,6 +122,7 @@
       $('.create-obj').click(async function () {
         const obj = $(this).parent().attr('id');
         if (!['lead', 'company', 'contact', 'deal', 'invoice'].includes(obj)) return console.error('Данный тип объекта не предусмотрен для генерации!');
+        $(this).prop('disabled', true);
         let res = await BX24Client.call('crm.' + obj + '.fields', {});
         let fieldsList = res.data();
         let myFields = {};
@@ -216,7 +160,7 @@
             continue;
           }
           if (key === 'STATUS_ID') {
-            myFields[key] = RANDOM.call('char', { chars: ['P'] });
+            myFields[key] = obj === 'invoice' ? 'P' : 'NEW';
             continue;
           }
           if (key === 'PAY_SYSTEM_ID') {
@@ -280,7 +224,6 @@
           else $(this).parent().find('.details-obj').attr('path', '/crm/' + obj + '/details/' + id + '/');
           $(this).parent().find('.info-obj').removeClass('d-none');
         }
-        $(this).attr('disabled', true);
       });
       $('.delete-obj').click(async function () {
         const obj = $(this).parent().parent().attr('id');
@@ -289,7 +232,7 @@
           let res = await BX24Client.call('crm.' + obj + '.delete', { id: id });
           console.log(res);
           $(this).parent().addClass('d-none');
-          $(this).parent().parent().find('.create-obj').removeAttr('disabled');
+          $(this).parent().parent().find('.create-obj').prop('disabled', false);
         }
       });
       $('.details-obj').click(function () {
