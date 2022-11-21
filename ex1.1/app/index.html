@@ -15,15 +15,15 @@
 <body class="container-fluid">
   <div class="p-4 row">
     <h1>Списать время</h1>
-    <div class="col-auto">
+    <div class="col-6">
       <form id="test" class="row">
         <div class="col-12 mt-2">
           <div class="row">
-            <div class="col-3">
+            <div class="col-6">
               <label for="start_date" class="form-label">Начальная дата:</label>
               <input name="start_date" type="date" class="form-control" required>
             </div>
-            <div class="col-3">
+            <div class="col-6">
               <label for="end_date" class="form-label">Конечная:</label>
               <input name="end_date" type="date" class="form-control" required>
             </div>
@@ -31,11 +31,11 @@
         </div>
         <div class="col-12 mt-2">
           <div class="row">
-            <div class="col-3">
+            <div class="col-6">
               <label for="min_hour">Мин. кол-во часов:</label>
               <input type="number" min="1" max="24" class="form-control" name="min_hour" value="1" required>
             </div>
-            <div class="col-3">
+            <div class="col-6">
               <label for="max_hour">Макс. кол-во часов:</label>
               <input type="number" min="1" max="24" class="form-control" name="max_hour" value="5" required>
             </div>
@@ -43,7 +43,7 @@
         </div>
         <div class="col-12 mt-2">
           <div class="row">
-            <div class="col-6">
+            <div class="col-12">
               <label for="comments">Комментарии (разделенные ";"):</label>
               <input type="text" class="form-control" name="comments" required>
             </div>
@@ -51,15 +51,26 @@
         </div>
         <div class="col-12 mt-2">
           <div class="row">
-            <div class="col-6">
-              <label for="comments">Задачи (id, разделенные ";"): </label>
-              <input type="text" class="form-control" name="tasks" required disabled>
+            <div class="col-12 mt-2">
+              <div id="check_status" class="alert alert-danger mb-0 d-none" role="alert"></div>
+            </div>
+            <div class="col-8">
+              <label for="tasks">Задачи (id, разделенные ";"): </label>
+              <input type="text" class="form-control" name="tasks" required>
+            </div>
+            <div class="col-4">
+              <label for="check_tasks">Валидность: </label>
+              <div id="check_tasks">
+                <input class="form-check-input align-middle" type="checkbox" name="valid" required
+                  onclick="return false;" style="height: 2rem; width: 2rem; margin: 0;">
+                <button id="check" type="button" class="btn btn-primary">Проверить</button>
+              </div>
             </div>
           </div>
         </div>
         <div class="col-12 mt-2">
           <div class="row">
-            <div class="col-6">
+            <div class="col-12">
               <label for="users">Пользователи:</label>
               <select name="users" class="form-select" size="16" multiple>
 
@@ -67,7 +78,7 @@
             </div>
           </div>
         </div>
-        <div class="col-12 mt-2">
+        <div class="col-12 mt-2 d-grid">
           <button type="submit" class="btn btn-primary">Запустить</button>
         </div>
       </form>
@@ -102,6 +113,7 @@
 
     $(document).ready(async function () {
 
+      //получение юзеров и заполнение мультиселекта
       let users_res = await BX24Client.call('user.get', {});
       let users_obj = users_res.data();
       while (users_res.more()) {
@@ -122,6 +134,8 @@
       let now = new Date(
         new Date().toLocaleString('en-US', { timeZone: 'Europe/Moscow' })
       );
+
+      //инициализация датапикеров и создание зависимостей для минимальной и максимальной даты между собой
       let datePickerStart = $('input[name="start_date"]');
       let datePickerEnd = $('input[name="end_date"]');
       datePickerStart.on('input', function () {
@@ -136,6 +150,7 @@
       datePickerStart.val(`${now.getFullYear()}-${('0' + (now.getMonth() + 1)).slice(-2)}-01`);
       datePickerStart.attr('max', `${now.getFullYear()}-${('0' + (now.getMonth() + 1)).slice(-2)}-${('0' + now.getDate()).slice(-2)}`);
 
+      //инициализация пикеров диапазона списанного времени и их зависимостей между собой
       let houtPickerMin = $('input[name="min_hour"]');
       let houtPickerMax = $('input[name="max_hour"]');
       houtPickerMin.on('input', function () {
@@ -145,16 +160,60 @@
         houtPickerMin.attr('max', $(this).val());
       });
 
+      //заполнение тасков дефолтным значение
       let tasksInput = $('input[name="tasks"]');
       tasksInput.val(TASKS.join(';'));
 
+      let checkValide = $('input[name="valid"]');
+
+      tasksInput.change(function () {
+        checkValide.prop('checked', false);
+      });
+
+      //заполнение комментариев дефолтным значение
       let commentsInput = $('input[name="comments"]');
       commentsInput.val(COMMENTS.join(';'));
+
+      //валидация тасков по кнопке
+      $('#check').click(async function () {
+        $(this).prop('disabled', true);
+        let alert = $('#check_status');
+        alert.addClass('d-none');
+
+        let tasks = tasksInput.val().split(';').map(e => parseInt(e));
+        if (!tasks || tasks.length < 1) {
+          alert.text('Не удалось извлечь ни одного id!');
+          alert.removeClass('d-none');
+          return $(this).prop('disabled', false);
+        };
+        if (!(tasks instanceof Array)) {
+          alert.text('Перечесление id не соответсвует заданной структуре!');
+          alert.removeClass('d-none');
+          return $(this).prop('disabled', false);
+        };
+        if (tasks.length > 50) {
+          alert.text('Максимум можно указать до 50 задач!');
+          alert.removeClass('d-none');
+          return $(this).prop('disabled', false);
+        };
+        let calls = tasks.map(e => ({ method: 'tasks.task.get', params: { taskId: e, select: ['ID'] } }));
+        let batch_res = await BX24Client.callBatch(calls);
+        for (let res of batch_res) {
+          if (res.error()) {
+            alert.text('Один или несколько id не смогли пройти проверку подлинности!');
+            alert.removeClass('d-none');
+            return $(this).prop('disabled', false);
+          }
+        }
+        checkValide.prop('checked', true);
+        return $(this).prop('disabled', false);
+      });
 
       $('#test').on('submit', async function (e) {
         e.preventDefault();
         $(this).find('input[type="sumbit"]').prop('disabled', true);
 
+        const check = checkValide.prop('checked');
         const start_date = new Date(datePickerStart.val());
         const end_date = new Date(datePickerEnd.val());
         const tasks = tasksInput.val().split(';').map(e => parseInt(e)) || TASKS;
@@ -164,18 +223,14 @@
 
         let users_count = 1;
         for (let user of users) {
-          /* 
-          *  Минимальная визуализация прогресса выполнения
-          */
+          //минимальная визуализация прогресса выполнения
           $('#status').text(`Пользователь: ${users_count}/${users.length}`);
           console.log(`==== USER #${users_count++} =====`);
           let actions_count = 1;
 
           for (let date = new Date(start_date); date <= end_date; date.setDate(date.getDate() + 1)) {
             if (date.getDay() !== 0 && date.getDay() !== 6) {
-              /* 
-              *  Минимальная визуализация прогресса выполнения
-              */
+              //минимальная визуализация прогресса выполнения
               $('#status2').text(`Запрос: ${actions_count}`);
               console.log(`Запрос #${actions_count++}:`);
 
