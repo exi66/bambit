@@ -9,30 +9,86 @@
   <script src="https://dev.bambit.ru/burul/resources/js/jquery-3.6.1.min.js"></script>
   <script src="https://dev.bambit.ru/burul/resources/js/bx-24-wrapper.js"></script>
   <title>app</title>
+  <style>
+    .hidden {
+      display: none;
+    }
+  </style>
 </head>
 
 <body>
-  <button id="test">test</button>
-  <span id="status"></span>
+  <div>
+    <form id="search">
+      <label for="title">Заголовок задачи (* для любого)</label>
+      <input name="title" type="text" required>
+      <label for="user_id">Ответственный (id) (* для любого)</label>
+      <input name="user_id" type="text" pattern="^[\*0-9]*$" required>
+      <button type="submit">Найти</button>
+    </form>
+  </div>
+  <div>
+    Найдено: <span class="total-count">0</span>
+    <form id="delete" class="hidden">
+      <label for="count">Сколько удалить</label>
+      <input name="count" type="number" min="1" required>
+      <button type="submit">Удалить</button>
+    </form>
+    <span id="status"></span>
+  </div>
   <script>
+    let query_obj;
     const BX24Client = new BX24Wrapper();
 
-    $(document).ready(function () {
-      $('#test').click(async function () {
-        $(this).prop('disabled', true);
-        let res = await BX24Client.call('tasks.task.list', {
-          filter: { TITLE: '123', RESPONSIBLE_ID: 18 }, select: ['ID'], order: { CREATED_DATE: 'asc' }
-        });
-        for (let count = 0; count < 12500 / 50; count++) {
-          let tasks = res.data().tasks;
-          let cmd = tasks.map(e => ({ method: 'tasks.task.delete', params: { taskId: e.id } }));
-          let local_res = await BX24Client.callBatch(cmd);
-          console.log(local_res);
+    const DEFAULT = {
+      TITLE: '123',
+      RESPONSIBLE_ID: 18,
+    }
 
-          res = await BX24Client.next(res);
-          $('#status').text(`${count}/${12500 / 50}`);
+    $(document).ready(function () {
+
+      let titleInput = $('input[name="title"]');
+      titleInput.val(DEFAULT.TITLE);
+      let userInput = $('input[name="user_id"]');
+      userInput.val(DEFAULT.RESPONSIBLE_ID);
+
+      $('#search').on('submit', async function (e) {
+        $('#delete').addClass('hidden');
+        e.preventDefault();
+        let title = titleInput.val();
+        let user_id = userInput.val();
+        let local_filter = {};
+        if (title !== '*') local_filter.TITLE = title;
+        if (user_id !== '*') local_filter.RESPONSIBLE_ID = parseInt(user_id);
+        query_obj = await BX24Client.call('tasks.task.list', {
+          filter: local_filter, select: ['ID'], order: { CREATED_DATE: 'asc' }
+        });
+        $('.total-count').text(query_obj.total());
+        if (query_obj.total() > 0) {
+          $('#delete input[name="count"]').attr('max', query_obj.total());
+          $('#delete input[name="count"]').val(query_obj.total());
+          $('#delete').removeClass('hidden');
         }
-        $(this).prop('disabled', false);
+      });
+
+      $('#delete').on('submit', async function (e) {
+        $(this).find('input[type="submit"]').prop('disabled', true);
+        e.preventDefault();
+        let count = $(this).find('input[name="count"]').val() || 50;
+        let tasks = query_obj.data().tasks;
+        let cmd = tasks.map(e => ({ method: 'tasks.task.delete', params: { taskId: e.id } }));
+        let local_res = await BX24Client.callBatch(cmd.slice(0, Math.min(cmd.length, count)));
+        count -= local_res.length;
+        console.log(local_res);
+        $('#status').text(`Осталось удалить: ${count}`);
+        while(count) {
+          query_obj = await BX24Client.next(query_obj);
+          cmd = tasks.map(e => ({ method: 'tasks.task.delete', params: { taskId: e.id } }));
+          local_res = await BX24Client.callBatch(cmd.slice(0, Math.min(cmd.length, count)));
+          count -= local_res.length;
+          console.log(local_res);
+          $('#status').text(`Осталось удалить: ${count}`);
+        }
+        $(this).find('input[type="submit"]').prop('disabled', false);
       });
     });
 
