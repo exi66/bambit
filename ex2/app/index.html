@@ -73,17 +73,20 @@
       $('#delete').on('submit', async function (e) {
         $(this).find('input[type="submit"]').prop('disabled', true);
         e.preventDefault();
-        let count = $(this).find('input[name="count"]').val() || 50;
+        let count = parseInt($(this).find('input[name="count"]').val()) || 50;
         let tasks = query_obj.data().tasks;
         let cmd = tasks.map(e => ({ method: 'tasks.task.delete', params: { taskId: e.id } }));
-        let local_res = await BX24Client.callBatch(cmd.slice(0, Math.min(cmd.length, count)));
+        if (count < cmd.length) cmd = cmd.slice(0, count);
+        let local_res = await BX24Client.callBatch(cmd);
         count -= local_res.length;
         console.log(local_res);
         $('#status').text(`Осталось удалить: ${count}`);
         while(count) {
           query_obj = await BX24Client.next(query_obj);
+          tasks = query_obj.data().tasks;
           cmd = tasks.map(e => ({ method: 'tasks.task.delete', params: { taskId: e.id } }));
-          local_res = await BX24Client.callBatch(cmd.slice(0, Math.min(cmd.length, count)));
+          if (count < cmd.length) cmd = cmd.slice(0, count);
+          local_res = await BX24Client.callBatch(cmd);
           count -= local_res.length;
           console.log(local_res);
           $('#status').text(`Осталось удалить: ${count}`);
