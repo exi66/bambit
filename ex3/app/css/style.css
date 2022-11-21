@@ -176,8 +176,11 @@ tbody tr:hover {
   -moz-user-select: none;
   user-select: none;
   color: #0e3577;
-  display: inline-block;
   white-space: nowrap;
+}
+
+.title-warpper { 
+  display: inline-block;
 }
 
 .sort-table:hover {
