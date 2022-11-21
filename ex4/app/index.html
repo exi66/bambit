@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <script src="//api.bitrix24.com/api/v1/"></script>
+  <script src="https://dev.bambit.ru/burul/resources/js/jquery-3.6.1.min.js"></script>
+  <script src="https://dev.bambit.ru/burul/resources/js/bx-24-wrapper.js"></script>
+  <script src="https://dev.bambit.ru/burul/resources/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <link rel="stylesheet" href="https://dev.bambit.ru/burul/resources/bootstrap/css/bootstrap.min.css">
+
+  <title>app</title>
+  <style>
+    .form-select-filter {}
+  </style>
+</head>
+
+<body>
+  <main id="app" class="container-fluid">
+    <h1>Удаление записей различных сущностей</h1>
+    <div class="row row-cols-2">
+      <div class="col row">
+        <div class="col-12 my-3">
+          <h2>Сущность</h2>
+          <select class="form-select form-select-lg">
+            <option value="lead" selected>Лиды</option>
+            <option value="task">Задачи</option>
+            <option value="company">Компании</option>
+          </select>
+        </div>
+        <div class="col-12 my-3">
+          <div class="form-select form-select-lg border form-select-filter">Фильтр</div>
+          <ul class="list-group">
+            <li class="list-group-item">An item</li>
+            <li class="list-group-item">A second item</li>
+            <li class="list-group-item">A third item</li>
+            <li class="list-group-item">A fourth item</li>
+            <li class="list-group-item">And a fifth one</li>
+          </ul>
+        </div>
+        <div class="col-12 my-3">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Сущность: <span class="entity-type">Лид</span></h5>
+              <div class="row my-1">
+                <div class="col my-auto">
+                  <p class="card-text">Найдено сущностей: <span class="entity-count">0</span></p>
+                </div>
+                <div class="col-auto ms-auto">
+                  <button class="btn btn-primary">Посмотреть</button>
+                </div>
+              </div>
+              <div class="d-grid">
+                <button class="btn btn-danger">Удалить все</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  </main>
+  <script>
+    const BX24Client = new BX24Wrapper();
+    BX24.init(BX24.getAuth());
+    BX24.resizeWindow($("#app").width(), $("#app").height(), (result) => { BX24.fitWindow() });
+
+    class Entities {
+      //надо так же переделать в класс
+      /** @property Object methods
+      * must be a array like:
+      * methods = {
+      *   list: { //list method
+      *     method: 'tasks.task.list',
+      *     filter: ... //default filter if needed
+      *     select: ... //default select if needed (dont forgot about ID if u set this param, this is required)
+      *   },
+      *   delete: { //delete method
+      *     method: 'tasks.task.delete',
+      *     param: 'taskId', //required id field name for method
+      *   }
+      * }
+      */
+      constructor(methods) {
+        if (!methods instanceof Object) {
+          throw 'methods prop must be a Object!'
+        }
+        this.methods = methods;
+        this.client = new BX24Wrapper();
+        this.entityList;
+      }
+      async get(settings) {
+        let __method = settings.method || this.methods.list.method, __filter = settings.filter || this.methods.list.filter;
+        if (!__filter || !__method) return;
+        let res = await this.client.call(__method, {
+          order: settings.order || { 'ID': 'ASC' },
+          filter: __filter,
+          select: settings.select || this.methods.list.select || ['ID'],
+          start: -1,
+        });
+        if (res.error()) throw 'Request error: ' + res.error();
+        let local_entityList = res.data();
+        while (res.more()) {
+          res = await this.client.next(res);
+          if (res.error()) throw 'Request error: ' + res.error();
+          local_entityList = local_entityList.concat(res.data());
+        }
+        return this.entityList = local_entityList;
+      }
+      async delete() {
+        if (!this.entityList) return;
+        let local_entityList = JSON.parse(JSON.stringify(!this.entityList)), result = [], length = 50;
+        while (local_entityList.length) result.push(local_entityList.splice(0, length));
+        let cmds = [];
+        for (let page of result) {
+          let cmd = page.map(e => ({ method: this.methods.delete.method, params: { [this.methods.delete.param]: e.ID } }));
+          cmds.push(cmd);
+        }
+        for (let page of cmds) {
+          await this.client.callBatch(page);
+        }
+      }
+    }
+
+    const test = async function () {
+      let a = new Entities({
+        list: {
+          method: 'crm.lead.list',
+        },
+        delete: {
+          method: 'crm.lead.delete',
+          param: 'id',
+        }
+      });
+
+      let b = await a.get({ filter: { 'TITLE': 'lhnW9' } });
+      console.log(b);
+    }
+
+    test();
+  </script>
+</body>
+
+</html>
