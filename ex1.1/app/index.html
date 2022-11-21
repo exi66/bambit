@@ -160,7 +160,7 @@
         houtPickerMin.attr('max', $(this).val());
       });
 
-      //заполнение тасков дефолтным значение
+      //заполнение тасков дефолтным значение и создание зависимости с чекбоксом
       let tasksInput = $('input[name="tasks"]');
       tasksInput.val(TASKS.join(';'));
 
@@ -180,13 +180,8 @@
         let alert = $('#check_status');
         alert.addClass('d-none');
 
-        let tasks = tasksInput.val().split(';').map(e => parseInt(e));
-        if (!tasks || tasks.length < 1) {
-          alert.text('Не удалось извлечь ни одного id!');
-          alert.removeClass('d-none');
-          return $(this).prop('disabled', false);
-        };
-        if (!(tasks instanceof Array)) {
+        let tasks = tasksInput.val().split(';').map(e => parseInt(e) || null);
+        if (tasks.find(e => e === null)) {
           alert.text('Перечесление id не соответсвует заданной структуре!');
           alert.removeClass('d-none');
           return $(this).prop('disabled', false);
