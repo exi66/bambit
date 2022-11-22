@@ -17,6 +17,12 @@
   <link rel="stylesheet" href="./css/air-datepicker.min.css">
   <link rel="stylesheet" href="https://dev.bambit.ru/burul/resources/bootstrap/css/bootstrap.min.css">
 
+  <style>
+    #filter {
+      min-height: 3.25rem;
+    }
+  </style>
+
   <title>app</title>
 </head>
 
@@ -27,23 +33,31 @@
       <div class="col row">
         <div class="col-12 my-3">
           <h2>Сущность</h2>
-          <select class="form-select form-select-lg">
+          <select id="select-entity" class="form-select form-select-lg">
             <option value="lead" selected>Лиды</option>
             <option value="task">Задачи</option>
             <option value="company">Компании</option>
           </select>
         </div>
         <div class="col-12 my-3">
-          <div class="form-select form-select-lg border form-select-filter" data-bs-toggle="collapse"
-            data-bs-target="#filter-menu" aria-expanded="false" aria-controls="filter-menu">Фильтр
+          <h2>Фильтр</h2>
+          <div id="filter" class="form-select form-select-lg form-select-filter" data-bs-toggle="collapse"
+            data-bs-target="#filter-menu" aria-expanded="true" aria-controls="filter-menu">
+            <div class="row">
+              <div class="col-auto filter-card d-inline-flex p-0 my-1" data-target="#id-picker"></div>
+              <div class="col-auto filter-card d-inline-flex p-0 my-1" data-target="#user-picker"></div>
+              <div class="col-auto filter-card d-inline-flex p-0 my-1" data-target="#date-picker"></div>
+              <div class="col-auto filter-card d-inline-flex p-0 my-1" data-target="#name-picker"></div>
+              <div class="col-auto filter-card d-inline-flex p-0 my-1" data-target="#status-picker"></div>
+            </div>
           </div>
-          <div class="collapse" id="filter-menu">
-            <form class="p-4 w-100">
-              <div class="mb-3 id-picker"></div>
-              <div class="mb-3 user-picker"></div>
-              <div class="mb-3 date-picker"></div>
-              <div class="mb-3 name-picker"></div>
-              <div class="mb-3 status-picker"></div>
+          <div class="collapse show" id="filter-menu">
+            <form class="p-4 w-100" id="filter-form" data-target="#filter">
+              <div id="id-picker" title="Идентификатор" class="mb-3 picker"></div>
+              <div id="user-picker" title="Ответственный" class="mb-3 picker"></div>
+              <div id="date-picker" title="Дата создания" class="mb-3 picker"></div>
+              <div id="name-picker" title="Название" class="mb-3 picker"></div>
+              <div id="status-picker" title="Статус" class="mb-3 picker"></div>
             </form>
           </div>
         </div>
@@ -70,36 +84,23 @@
   <script>
     const BX24Client = new BX24Wrapper();
     BX24.init(BX24.getAuth());
-    BX24.resizeWindow($("#app").width(), $("#app").height(), (result) => { BX24.fitWindow() });
-
-    function date2str(d) {
-      return this.paddatepart(d.getDate()) + '.' + this.paddatepart(1 + d.getMonth()) + '.' + d.getFullYear();
-    }
-    function paddatepart(part) {
-      return part >= 10 ? part.toString() : '0' + part.toString();
-    }
-    function dateInMoscow() {
-      return new Date(
-        new Date().toLocaleString('en-US', { timeZone: 'Europe/Moscow' })
-      );
-    }
 
     class Entities {
-      //надо так же переделать в класс
+      //надо так же переделать в класс?
       /** @property Object methods
-      * must be a Object like:
-      * methods = {
-      *   list: { //list method
-      *     method: 'tasks.task.list',
-      *     filter: ... //default filter if needed
-      *     select: ... //default select if needed (dont forgot about ID if u set this param, this is required)
-      *   },
-      *   delete: { //delete method
-      *     method: 'tasks.task.delete',
-      *     param: 'taskId', //required id field name for method
-      *   }
-      * }
-      */
+       * must be a Object like:
+       * methods = {
+       *   list: { //list method
+       *     method: 'tasks.task.list',
+       *     filter: ... //default filter if needed
+       *     select: ... //default select if needed (dont forgot about ID if u set this param, this is required)
+       *   },
+       *   delete: { //delete method
+       *     method: 'tasks.task.delete',
+       *     param: 'taskId', //required id field name for method
+       *   }
+       * }
+       **/
       constructor(methods) {
         if (!methods instanceof Object) {
           throw 'methods prop must be a Object!'
@@ -126,6 +127,17 @@
         }
         return this.entityList = local_entityList;
       }
+      async count(settings) {
+        let __method = settings.method || this.methods.list.method, __filter = settings.filter || this.methods.list.filter;
+        if (!__method) return;
+        let res = await this.client.call(__method, {
+          order: { 'ID': 'ASC' },
+          filter: __filter,
+          select: ['ID'],
+        });
+        if (res.error()) throw 'Request error: ' + res.error();
+        return res.total();
+      }
       async delete() {
         if (!this.entityList) return;
         let local_entityList = JSON.parse(JSON.stringify(!this.entityList)), result = [], length = 50;
@@ -142,29 +154,136 @@
         }
       }
     }
-
     //пример использования
-    const test = async function () {
-      let a = new Entities({
-        list: {
-          method: 'crm.lead.list',
-        },
-        delete: {
-          method: 'crm.lead.delete',
-          param: 'id',
-        }
-      });
+    // async function () {
+    //   let a = new Entities({
+    //     list: {
+    //       method: 'crm.lead.list',
+    //     },
+    //     delete: {
+    //       method: 'crm.lead.delete',
+    //       param: 'id',
+    //     }
+    //   });
 
-      let b = await a.get({ filter: { 'ASSIGNED_BY_ID': 92 } });
-      console.log(b);
+    //   let b = await a.get({ filter: { 'ASSIGNED_BY_ID': 92 } });
+    //   console.log(b);
+    // }
+
+    const ENTITIES = {
+      lead: () => {
+        return new Entities({
+          list: {
+            method: 'crm.lead.list',
+          },
+          delete: {
+            method: 'crm.lead.delete',
+            param: 'id',
+          }
+        })
+      },
+    };
+
+    //каждый из методов объекта представляет из себя соотвествующий своему типу преобразователь данных формы в filter для list метода
+    //переделать в класс?
+    /** @property Object query
+     * must be like obj {
+     *    'users[]': [], //unset if empty
+     *    title: String,
+     *    min_id: String,
+     *    max_id: max_id,
+     *    start_date: String (like dd.mm.yyyy),
+     *    end_date: String (like dd.mm.yyyy),
+     *    'status[]': [], //unset if empty
+     * }
+     **/
+    const SERIALIZE = {
+      serializeLead: function (query) {
+        let ___filter = {};
+        if (query['users[]']) ___filter.ASSIGNED_BY_ID = query['users[]'];
+        if (query.title) ___filter.TITLE = query.title;
+        if (query.min_id) ___filter['>ID'] = parseInt(query.min_id);
+        if (query.max_id) ___filter['<ID'] = parseInt(query.max_id);
+        if (query.start_date) ___filter['>DATE_CREATE'] = this.date2str(query.start_date) + 'T00:00:00';
+        if (query.end_date) ___filter['<DATE_CREATE'] = this.date2str(query.end_date) + 'T23:59:59';
+        if (query['status[]']) ___filter.STATUS_ID = query['status[]'];
+        return ___filter;
+      },
+      serializeCompany: function (query) {
+        let ___filter = {};
+        if (query['users[]']) ___filter.ASSIGNED_BY_ID = query['users[]'];
+        if (query.title) ___filter.TITLE = query.title;
+        if (query.min_id) ___filter['>ID'] = parseInt(query.min_id);
+        if (query.max_id) ___filter['<ID'] = parseInt(query.max_id);
+        if (query.start_date) ___filter['>DATE_CREATE'] = this.date2str(query.start_date) + 'T00:00:00';
+        if (query.end_date) ___filter['<DATE_CREATE'] = this.date2str(query.end_date) + 'T23:59:59';
+        return ___filter;
+      },
+      serializeTask: function (query) {
+        let ___filter = {};
+        if (query['users[]']) ___filter.RESPONSIBLE_ID = query['users[]'];
+        if (query.title) ___filter.TITLE = query.title;
+        if (query.min_id) ___filter['>ID'] = parseInt(query.min_id);
+        if (query.max_id) ___filter['<ID'] = parseInt(query.max_id);
+        if (query.start_date) ___filter['>DATE_CREATE'] = this.date2str(query.start_date) + 'T00:00:00';
+        if (query.end_date) ___filter['<DATE_CREATE'] = this.date2str(query.end_date) + 'T23:59:59';
+        if (query['status[]']) ___filter.REAL_STATUS = query['status[]'];
+        return ___filter;
+      },
+      //вспомогательные функции
+      date2str: function (date_string) {
+        let tmp = date_string.split('.');
+        let d = new Date(tmp[2] + '-' + tmp[1] + '-' + tmp[0]);
+        return d.getFullYear() + '-' + this.paddatepart(1 + d.getMonth()) + '-' + this.paddatepart(d.getDate());
+      },
+      paddatepart: function (part) {
+        return part >= 10 ? part.toString() : '0' + part.toString();
+      }
     }
 
-    test();
+    const declOfNum = function (number, titles) {
+      cases = [2, 0, 1, 1, 1, 2];
+      return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
+    }
 
+    //самописный обработчик формы, выплевывает ассоциативный объект
+    //!!! выпленет массив только если обрабатываемый инпут имеет в названии [], например name="users[]" !!!
+    jQuery.fn.serializeObject = function () {
+      var arrayData, objectData;
+      arrayData = this.serializeArray();
+      objectData = {};
+      $.each(arrayData, function () {
+        var value;
+        if (this.value != null) {
+          value = this.value;
+        } else {
+          value = '';
+        }
+        if (this.name.includes('[]')) {
+          objectData[this.name] != null ? objectData[this.name].push(value) : objectData[this.name] = [value];
+        } else {
+          objectData[this.name] = value;
+        }
+      });
+      return objectData;
+    };
   </script>
-  <script>
-
-    const createUserPicker = async function (parent) {
+  <script>//В этом блоке вся работа с DOM деревом
+    /**
+     * Блок с инициализаторами пикеров разных типов данных
+     **/
+    function date2str(d) {
+      return paddatepart(d.getDate()) + '.' + paddatepart(1 + d.getMonth()) + '.' + d.getFullYear();
+    }
+    function paddatepart(part) {
+      return part >= 10 ? part.toString() : '0' + part.toString();
+    }
+    function dateInMoscow() {
+      return new Date(
+        new Date().toLocaleString('en-US', { timeZone: 'Europe/Moscow' })
+      );
+    }
+    const createUserPicker = async function (parent, callback) {
       let res = await BX24Client.call('user.get', {});
       let users_list = res.data();
       while (res.more()) {
@@ -172,7 +291,7 @@
         users_list = users_list.concat(res.data());
       }
       $(parent).append(`<label class="form-label w-100">Ответственный:
-        <select class="users-select" name="users[]" multiple="multiple"></select>
+        <select class="filter-input users-select" name="users[]" multiple="multiple"></select>
       </label>`);
       let users_select = $(parent).find('.users-select');
       for (let user of users_list) {
@@ -181,31 +300,63 @@
           ${user.NAME && user.LAST_NAME ? user.NAME + ' ' + user.LAST_NAME : 'Нет имени (id: ' + user.ID + ')'}
         </option>`)
       }
-      return users_select.select2({ width: '100%' });
+      users_select.select2({ width: '100%' });
+
+      users_select.change(function (e) {
+        let value = $(e.target).val().length > 0 ?
+          `${$(e.target).val().length} ${declOfNum($(e.target).val().length, ['пользователь', 'пользователя', 'пользователей'])}` :
+          null;
+        callback({
+          parent: parent,
+          name: 'users',
+          value: value,
+          label: 'Ответственный:',
+        });
+      });
     }
 
-    const createIdPicker = function (parent) {
+    const createIdPicker = function (parent, callback) {
       $(parent).append(`<label class="form-label w-100">Идентификатор:
         <div class="d-flex">
-          <label class="form-label text-start my-auto mx-2" for="min_id">От: </label>
-          <input type="number" name="min_id" class="form-control w-auto" min="0">
-          <label class="form-label text-start my-auto mx-2" for="max_id">До: </label>
-          <input type="number" name="max_id" class="form-control w-auto">
+          <label class="form-label text-start my-auto mx-2" for="min_id">От:</label>
+          <input type="number" name="min_id" class="filter-input form-control" min="0">
+          <label class="form-label text-start my-auto mx-2" for="max_id">До:</label>
+          <input type="number" name="max_id" class="filter-input form-control" min="0">
         </div>
       </label>`);
+      let min_id = $('input[name="min_id"]');
+      let max_id = $('input[name="max_id"]');
+      min_id.change(function (e) {
+        max_id.attr('min', $(e.target).val());
+      });
+      max_id.change(function (e) {
+        min_id.attr('max', $(e.target).val());
+      });
+
+      $(parent + ' .filter-input').change(function (e) {
+        let label = $(parent + ' label[for="' + $(e.target).attr('name') + '"]').text();
+        callback({
+          parent: parent,
+          name: $(e.target).attr('name'),
+          value: $(e.target).val(),
+          label: label,
+        });
+      });
     }
 
-    const createDatePicker = function (parent) {
+    const createDatePicker = function (parent, callback) {
       $(parent).append(`<label class="form-label w-100">Дата создания:
         <div class="d-flex">
-          <label class="form-label text-start my-auto mx-2" for="min_id">От: </label>
-          <input type="text" name="start_date" class="form-control w-auto" readonly>
-          <label class="form-label text-start my-auto mx-2" for="max_id">До: </label>
-          <input type="text" name="end_date" class="form-control w-auto" readonly>
+          <label class="form-label text-start my-auto mx-2" for="start_date">Начальная: </label>
+          <input type="text" name="start_date" class="filter-input form-control" readonly>
+          <label class="form-label text-start my-auto mx-2" for="end_date">Конечная: </label>
+          <input type="text" name="end_date" class="filter-input form-control" readonly>
         </div>
       </label>`);
       let startDatePicker = new AirDatepicker(parent + ' input[name="start_date"]', {
         minDate: new Date(1),
+        buttons: ['clear'],
+        multipleDates: false,
         dateFormat(date) {
           return date2str(date);
         },
@@ -213,10 +364,18 @@
           endDatePicker.update({
             minDate: date,
           });
+          let value = date ? date2str(date) : null;
+          callback({
+            parent: parent,
+            name: "start_date",
+            value: value,
+            label: 'Начальная:',
+          });
         }
       });
       let endDatePicker = new AirDatepicker(parent + ' input[name="end_date"]', {
         maxDate: dateInMoscow(),
+        buttons: ['clear'],
         multipleDates: false,
         dateFormat(date) {
           return date2str(date);
@@ -225,17 +384,33 @@
           startDatePicker.update({
             maxDate: date,
           });
+          let value = date ? date2str(date) : null;
+          callback({
+            parent: parent,
+            name: "end_date",
+            value: value,
+            label: 'Конечная:',
+          });
         }
       });
       return { start: startDatePicker, end: endDatePicker };
     }
 
-    const createNamePicker = function (parent) {
-      $(parent).append(`<label class="form-label" for="title">Название содержит:</label><input type="text" name="title" class="form-control">`);
+    const createNamePicker = function (parent, callback) {
+      $(parent).append(`<label class="form-label" for="title">Название содержит:</label><input type="text" name="title" class="filter-input form-control">`);
+      $(parent + ' .filter-input').change(function (e) {
+        let label = $(parent + ' label[for="' + $(e.target).attr('name') + '"]').text();
+        callback({
+          parent: parent,
+          name: $(e.target).attr('name'),
+          value: $(e.target).val(),
+          label: label,
+        });
+      });
     }
 
-    const createStatusPicker = async function (parent, entity) {
-      let ENTITY_ID = ['STATUS', 'SOURCE'];
+    const createStatusPicker = async function (parent, entity, callback) {
+      const ENTITY_ID = ['STATUS', 'SOURCE', 'TASK'];
       if (!ENTITY_ID.includes(String(entity).toUpperCase())) throw 'This type of entity dont support!'
       let res = await BX24Client.call('crm.status.list', {
         order: { 'SORT': 'ASC' },
@@ -247,7 +422,7 @@
         status_list = status_list.concat(res.data());
       }
       $(parent).append(`<label class="form-label w-100">Статус:
-        <select class="${String(entity).toLocaleLowerCase()}-select" name="status[]" multiple="multiple"></select>
+        <select class="filter-input ${String(entity).toLocaleLowerCase()}-select" name="status[]" multiple="multiple"></select>
       </label>`);
       let status_select = $(parent).find(`.${String(entity).toLocaleLowerCase()}-select`);
       for (let status of status_list) {
@@ -256,15 +431,70 @@
           ${status.NAME || status.STATUS_ID}
         </option>`)
       }
-      return status_select.select2({ width: '100%' });
+      status_select.select2({ width: '100%' });
+      status_select.change(function (e) {
+        let value = $(e.target).val().length > 0 ?
+          `${$(e.target).val().length} ${declOfNum($(e.target).val().length, ['статус', 'статуса', 'статусов'])}` :
+          null;
+        callback({
+          parent: parent,
+          name: 'status',
+          value: value,
+          label: 'Статус:',
+        });
+      });
     }
 
-    $(document).ready(function () {
-      createUserPicker('.user-picker');
-      createIdPicker('.id-picker');
-      createDatePicker('.date-picker');
-      createNamePicker('.name-picker');
-      createStatusPicker('.status-picker', 'STATUS');
+    /**
+     * Блок с инициализацией приложения и работой после прогрузки страницы
+     **/
+    $(document).ready(async function () {
+      /**
+       * Эта функция передается в качестве обработчика нажатий на все пикеры, описанные в прошлом блоке
+       * @property data = {
+       *    parent: String, //общий враппер, указанный при создании
+       *    name: String, //name атрибут инпута
+       *    value: String || Array || Integer.., //значение
+       *    label: String //значение лейбла, у которого в for указан нейм инпута
+       * }
+       **/
+      function callback(data) {
+        if (!data) return;
+        let parent = $('#filter').find('.filter-card[data-target="' + data.parent + '"]');
+        parent.find('#' + data.name + '-wrapper').remove();
+        if (data.value) {
+          parent.append(`<div id="${data.name}-wrapper" class="input-wrapper px-1 mx-1 my-auto badge text-bg-primary">
+            <span class="label-wrapper">${data.label || 'Не задан'}</span>
+            <span class="value-wrapper">${data.value}</span>
+          </div>`);
+        }
+        updateCount();
+        BX24.resizeWindow($("#app").width(), $("#app").height(), (result) => {
+          BX24.fitWindow();
+        });
+      }
+
+      async function updateCount() {
+        let type = $('#select-entity').val(), query = $('#filter-form').serializeObject(), count = 0, ___filter = {}, entity = {};
+        //? переделать в свитч?
+        if (type === 'lead') {
+          entity = ENTITIES.lead();
+          ___filter = SERIALIZE.serializeLead(query);
+        } else throw 'Unknow type on entity!';
+        count = await entity.count({ filter: ___filter });
+        $('.entity-count').text(count);
+      }
+
+      await createUserPicker('#user-picker', callback);
+      createIdPicker('#id-picker', callback);
+      createDatePicker('#date-picker', callback);
+      createNamePicker('#name-picker', callback);
+      await createStatusPicker('#status-picker', 'STATUS', callback);
+
+      BX24.resizeWindow($("#app").width(), $("#app").height(), (result) => {
+        BX24.fitWindow();
+        $('#filter-menu').collapse('hide');
+      });
     });
   </script>
 </body>
