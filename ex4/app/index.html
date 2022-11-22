@@ -10,13 +10,14 @@
   <script src="https://dev.bambit.ru/burul/resources/js/jquery-3.6.1.min.js"></script>
   <script src="https://dev.bambit.ru/burul/resources/js/bx-24-wrapper.js"></script>
   <script src="https://dev.bambit.ru/burul/resources/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="./js/select2.min.js"></script>
+  <script src="./js/air-datepicker.min.js"></script>
 
+  <link rel="stylesheet" href="./css/select2.min.css">
+  <link rel="stylesheet" href="./css/air-datepicker.min.css">
   <link rel="stylesheet" href="https://dev.bambit.ru/burul/resources/bootstrap/css/bootstrap.min.css">
 
   <title>app</title>
-  <style>
-    .form-select-filter {}
-  </style>
 </head>
 
 <body>
@@ -33,14 +34,18 @@
           </select>
         </div>
         <div class="col-12 my-3">
-          <div class="form-select form-select-lg border form-select-filter">Фильтр</div>
-          <ul class="list-group">
-            <li class="list-group-item">An item</li>
-            <li class="list-group-item">A second item</li>
-            <li class="list-group-item">A third item</li>
-            <li class="list-group-item">A fourth item</li>
-            <li class="list-group-item">And a fifth one</li>
-          </ul>
+          <div class="form-select form-select-lg border form-select-filter" data-bs-toggle="collapse"
+            data-bs-target="#filter-menu" aria-expanded="false" aria-controls="filter-menu">Фильтр
+          </div>
+          <div class="collapse" id="filter-menu">
+            <form class="p-4 w-100">
+              <div class="mb-3 id-picker"></div>
+              <div class="mb-3 user-picker"></div>
+              <div class="mb-3 date-picker"></div>
+              <div class="mb-3 name-picker"></div>
+              <div class="mb-3 status-picker"></div>
+            </form>
+          </div>
         </div>
         <div class="col-12 my-3">
           <div class="card">
@@ -67,10 +72,22 @@
     BX24.init(BX24.getAuth());
     BX24.resizeWindow($("#app").width(), $("#app").height(), (result) => { BX24.fitWindow() });
 
+    function date2str(d) {
+      return this.paddatepart(d.getDate()) + '.' + this.paddatepart(1 + d.getMonth()) + '.' + d.getFullYear();
+    }
+    function paddatepart(part) {
+      return part >= 10 ? part.toString() : '0' + part.toString();
+    }
+    function dateInMoscow() {
+      return new Date(
+        new Date().toLocaleString('en-US', { timeZone: 'Europe/Moscow' })
+      );
+    }
+
     class Entities {
       //надо так же переделать в класс
       /** @property Object methods
-      * must be a array like:
+      * must be a Object like:
       * methods = {
       *   list: { //list method
       *     method: 'tasks.task.list',
@@ -115,8 +132,10 @@
         while (local_entityList.length) result.push(local_entityList.splice(0, length));
         let cmds = [];
         for (let page of result) {
-          let cmd = page.map(e => ({ method: this.methods.delete.method, params: { [this.methods.delete.param]: e.ID } }));
-          cmds.push(cmd);
+          cmds.push(page.map(e => ({
+            method: this.methods.delete.method,
+            params: { [this.methods.delete.param]: e.ID }
+          })));
         }
         for (let page of cmds) {
           await this.client.callBatch(page);
@@ -124,6 +143,7 @@
       }
     }
 
+    //пример использования
     const test = async function () {
       let a = new Entities({
         list: {
@@ -135,11 +155,117 @@
         }
       });
 
-      let b = await a.get({ filter: { 'TITLE': 'lhnW9' } });
+      let b = await a.get({ filter: { 'ASSIGNED_BY_ID': 92 } });
       console.log(b);
     }
 
     test();
+
+  </script>
+  <script>
+
+    const createUserPicker = async function (parent) {
+      let res = await BX24Client.call('user.get', {});
+      let users_list = res.data();
+      while (res.more()) {
+        res = await BX24Client.next(res);
+        users_list = users_list.concat(res.data());
+      }
+      $(parent).append(`<label class="form-label w-100">Ответственный:
+        <select class="users-select" name="users[]" multiple="multiple"></select>
+      </label>`);
+      let users_select = $(parent).find('.users-select');
+      for (let user of users_list) {
+        users_select.append(`
+        <option value="${user.ID}">
+          ${user.NAME && user.LAST_NAME ? user.NAME + ' ' + user.LAST_NAME : 'Нет имени (id: ' + user.ID + ')'}
+        </option>`)
+      }
+      return users_select.select2({ width: '100%' });
+    }
+
+    const createIdPicker = function (parent) {
+      $(parent).append(`<label class="form-label w-100">Идентификатор:
+        <div class="d-flex">
+          <label class="form-label text-start my-auto mx-2" for="min_id">От: </label>
+          <input type="number" name="min_id" class="form-control w-auto" min="0">
+          <label class="form-label text-start my-auto mx-2" for="max_id">До: </label>
+          <input type="number" name="max_id" class="form-control w-auto">
+        </div>
+      </label>`);
+    }
+
+    const createDatePicker = function (parent) {
+      $(parent).append(`<label class="form-label w-100">Дата создания:
+        <div class="d-flex">
+          <label class="form-label text-start my-auto mx-2" for="min_id">От: </label>
+          <input type="text" name="start_date" class="form-control w-auto" readonly>
+          <label class="form-label text-start my-auto mx-2" for="max_id">До: </label>
+          <input type="text" name="end_date" class="form-control w-auto" readonly>
+        </div>
+      </label>`);
+      let startDatePicker = new AirDatepicker(parent + ' input[name="start_date"]', {
+        minDate: new Date(1),
+        dateFormat(date) {
+          return date2str(date);
+        },
+        onSelect({ date }) {
+          endDatePicker.update({
+            minDate: date,
+          });
+        }
+      });
+      let endDatePicker = new AirDatepicker(parent + ' input[name="end_date"]', {
+        maxDate: dateInMoscow(),
+        multipleDates: false,
+        dateFormat(date) {
+          return date2str(date);
+        },
+        onSelect({ date }) {
+          startDatePicker.update({
+            maxDate: date,
+          });
+        }
+      });
+      return { start: startDatePicker, end: endDatePicker };
+    }
+
+    const createNamePicker = function (parent) {
+      $(parent).append(`<label class="form-label" for="title">Название содержит:</label><input type="text" name="title" class="form-control">`);
+    }
+
+    const createStatusPicker = async function (parent, entity) {
+      let ENTITY_ID = ['STATUS', 'SOURCE'];
+      if (!ENTITY_ID.includes(String(entity).toUpperCase())) throw 'This type of entity dont support!'
+      let res = await BX24Client.call('crm.status.list', {
+        order: { 'SORT': 'ASC' },
+        filter: { 'ENTITY_ID': String(entity).toUpperCase() }
+      });
+      let status_list = res.data();
+      while (res.more()) {
+        res = await BX24Client.next(res);
+        status_list = status_list.concat(res.data());
+      }
+      $(parent).append(`<label class="form-label w-100">Статус:
+        <select class="${String(entity).toLocaleLowerCase()}-select" name="status[]" multiple="multiple"></select>
+      </label>`);
+      let status_select = $(parent).find(`.${String(entity).toLocaleLowerCase()}-select`);
+      for (let status of status_list) {
+        status_select.append(`
+        <option value="${status.STATUS_ID}">
+          ${status.NAME || status.STATUS_ID}
+        </option>`)
+      }
+      return status_select.select2({ width: '100%' });
+    }
+
+    $(document).ready(function () {
+      createUserPicker('.user-picker');
+      createIdPicker('.id-picker');
+      createDatePicker('.date-picker');
+      createNamePicker('.name-picker');
+      createStatusPicker('.status-picker', 'STATUS');
+    });
   </script>
 </body>
 
