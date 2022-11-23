@@ -21,6 +21,133 @@
     #filter {
       min-height: 3.25rem;
     }
+
+    .user-avatar {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    .preloader {
+      position: relative;
+      display: block;
+      margin: 0 auto 50px auto;
+      width: 247px;
+      height: 246px;
+      background: #fff;
+    }
+
+    .arrows {
+      position: absolute;
+      top: 19px;
+      left: 20px;
+      display: inline-block;
+      width: 210px;
+      height: 210px;
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjA3IDIwNyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNDQuMjcgMTgxLjczNGMzMC42MTEgMjMuMDA3IDczLjIyMyAyNi45MjUgMTA4LjQ4IDYuNTcgMzUuNi0yMC41NTQgNTMuNTE1LTU5Ljk3MyA0OC40MS05OC4zMzhhMi40MDcgMi40MDcgMCAwIDEgNC40NTctLjYzMWM1LjM1NCA0MC4xMjktMTMuMzggODEuMzY3LTUwLjYxNyAxMDIuODY2LTM2LjczOCAyMS4yMS04MS4xMTMgMTcuMjE3LTExMy4wOTgtNi42MTdsMS45NzkgMTEuMjIzYTIuMDYzIDIuMDYzIDAgMSAxLTQuMDY0LjcxN2wtMi44NTMtMTYuMTgxYTIuMDU4IDIuMDU4IDAgMCAxIC4wMDctLjc1NiAyLjA1NiAyLjA1NiAwIDAgMSAxLjY5OS0yLjA0bDE2LjI2OS0yLjg3YTIuMDU2IDIuMDU2IDAgMSAxIC43MTQgNC4wNWwtMTEuMzg0IDIuMDA3ek0xNjAuMTMgMjIuMzc3QzEyOS43MzUgMS4wNTggODguNTItMi4wODkgNTQuMjUgMTcuNjk3Yy0zNC45IDIwLjE1LTUyLjgwNSA1OC40My00OC42ODQgOTYuMDc1YTIuNDA3IDIuNDA3IDAgMCAxLTQuNDI4LjkwMkMtMy4zNDggNzUuMTc4IDE1LjM3OCAzNC45NDMgNTIgMTMuNzk5YzM1LjkwMS0yMC43MjcgNzkuMDkzLTE3LjM4NiAxMTAuODkyIDUuMDE4bC0yLjI1NC0xMS41OTJhMi4wNjMgMi4wNjMgMCAxIDEgNC4wNS0uNzg3bDMuMTM2IDE2LjEyOGMuMDUuMjU4LjA1LjUxMy4wMDYuNzU2YTIuMDU2IDIuMDU2IDAgMCAxLTEuNjYzIDIuMDdsLTE2LjIxNiAzLjE1MmEyLjA1NiAyLjA1NiAwIDAgMS0uNzg1LTQuMDM2bDEwLjk2My0yLjEzeiIgZmlsbD0iI0E2RUFGRSIgZmlsbC1ydWxlPSJldmVub2RkIi8+PC9zdmc+');
+      background-repeat: no-repeat;
+      opacity: 1;
+    }
+
+    @keyframes mercury-group {
+      0% {
+        transform: rotateZ(-360deg);
+      }
+
+      100% {
+        transform: rotateZ(0deg);
+      }
+    }
+
+    .arrows {
+      animation: mercury-group 5s linear infinite;
+    }
+
+    .search {
+      position: absolute;
+      top: 58px;
+      left: 31px;
+      display: inline-block;
+      width: 198px;
+      height: 170px;
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTk2IDE3MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+PGRlZnM+PHJlY3QgaWQ9ImIiIHk9IjYiIHdpZHRoPSI2OSIgaGVpZ2h0PSI2MiIgcng9IjUiLz48ZmlsdGVyIHg9Ii0xOS42JSIgeT0iLTE2LjklIiB3aWR0aD0iMTM5LjElIiBoZWlnaHQ9IjE0My41JSIgZmlsdGVyVW5pdHM9Im9iamVjdEJvdW5kaW5nQm94IiBpZD0iYSI+PGZlT2Zmc2V0IGR5PSIzIiBpbj0iU291cmNlQWxwaGEiIHJlc3VsdD0ic2hhZG93T2Zmc2V0T3V0ZXIxIi8+PGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iNCIgaW49InNoYWRvd09mZnNldE91dGVyMSIgcmVzdWx0PSJzaGFkb3dCbHVyT3V0ZXIxIi8+PGZlQ29sb3JNYXRyaXggdmFsdWVzPSIwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwLjA3NDQzNzI4MTUgMCIgaW49InNoYWRvd0JsdXJPdXRlcjEiLz48L2ZpbHRlcj48cGF0aCBkPSJNMjguNDM0IDBoOTIuNDA3YTUgNSAwIDAgMSA0Ljk5OCA1LjE1NmwtMS43NiA1Ni4zMDdhNSA1IDAgMCAxLTIuMTc0IDMuOTdMMTA1IDc3SDY0TDI3LjE3MiAzNy4yNjVhNSA1IDAgMCAxLTEuMzE1LTIuOTg0TDIzLjQ1IDUuNDE1QTUgNSAwIDAgMSAyOC40MzQgMHoiIGlkPSJkIi8+PGZpbHRlciB4PSItMTIuNyUiIHk9Ii0xMy42JSIgd2lkdGg9IjEyNS42JSIgaGVpZ2h0PSIxMzUuMSUiIGZpbHRlclVuaXRzPSJvYmplY3RCb3VuZGluZ0JveCIgaWQ9ImMiPjxmZU9mZnNldCBkeT0iMyIgaW49IlNvdXJjZUFscGhhIiByZXN1bHQ9InNoYWRvd09mZnNldE91dGVyMSIvPjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjQiIGluPSJzaGFkb3dPZmZzZXRPdXRlcjEiIHJlc3VsdD0ic2hhZG93Qmx1ck91dGVyMSIvPjxmZUNvbG9yTWF0cml4IHZhbHVlcz0iMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMC4zMDU3NTI4NDEgMCIgaW49InNoYWRvd0JsdXJPdXRlcjEiLz48L2ZpbHRlcj48cmVjdCBpZD0iZiIgeD0iNTUiIHk9IjciIHdpZHRoPSI1NyIgaGVpZ2h0PSI1NyIgcng9IjUiLz48ZmlsdGVyIHg9Ii0xNy41JSIgeT0iLTE0JSIgd2lkdGg9IjEzNS4xJSIgaGVpZ2h0PSIxMzUuMSUiIGZpbHRlclVuaXRzPSJvYmplY3RCb3VuZGluZ0JveCIgaWQ9ImUiPjxmZU9mZnNldCBkeT0iMiIgaW49IlNvdXJjZUFscGhhIiByZXN1bHQ9InNoYWRvd09mZnNldE91dGVyMSIvPjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjMiIGluPSJzaGFkb3dPZmZzZXRPdXRlcjEiIHJlc3VsdD0ic2hhZG93Qmx1ck91dGVyMSIvPjxmZUNvbG9yTWF0cml4IHZhbHVlcz0iMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMC4xNzk0Njg5NjkgMCIgaW49InNoYWRvd0JsdXJPdXRlcjEiLz48L2ZpbHRlcj48cGF0aCBkPSJNNSAwaDUxLjdhNSA1IDAgMCAxIDMuNzk3IDEuNzQ2TDc3IDIxdjUwYTUgNSAwIDAgMS01IDVINWE1IDUgMCAwIDEtNS01VjVhNSA1IDAgMCAxIDUtNXoiIGlkPSJoIi8+PGZpbHRlciB4PSItMTMlIiB5PSItMTAuNSUiIHdpZHRoPSIxMjYlIiBoZWlnaHQ9IjEyNi4zJSIgZmlsdGVyVW5pdHM9Im9iamVjdEJvdW5kaW5nQm94IiBpZD0iZyI+PGZlT2Zmc2V0IGR5PSIyIiBpbj0iU291cmNlQWxwaGEiIHJlc3VsdD0ic2hhZG93T2Zmc2V0T3V0ZXIxIi8+PGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMyIgaW49InNoYWRvd09mZnNldE91dGVyMSIgcmVzdWx0PSJzaGFkb3dCbHVyT3V0ZXIxIi8+PGZlQ29sb3JNYXRyaXggdmFsdWVzPSIwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwLjA5NTc0NDA5OTcgMCIgaW49InNoYWRvd0JsdXJPdXRlcjEiLz48L2ZpbHRlcj48cGF0aCBkPSJNNDUuOTE1IDQ1LjYyNGMtMjQuOTM1IDI0Ljk0LTI1LjA5OCA2NS40ODItLjE4OCA5MC4zOTkgMjQuOTEgMjQuOTE2IDY1LjQzNCAyNC43NiA5MC41MzYtLjM0NyAyNC45MzQtMjQuOTQgMjUuMjU3LTY1LjY0Mi4zNDctOTAuNTU4LTI0LjkwNC0yNC45MjMtNjUuNTk1LTI0LjYtOTAuNjk3LjUwOGwuMDAyLS4wMDJ6bTg0Ljk2NyA4NC45NDVjLTIyLjEyIDIyLjEyNS01OC4wNTggMjIuMjYzLTgwLjAxLjMwNy0yMS45NS0yMS45NTYtMjEuODEyLTU3LjkwNC4zMDctODAuMDI4IDIyLjEyLTIyLjEyNSA1OC4wNTktMjIuMjYzIDgwLjAxLS4zMDcgMjEuOTQ0IDIxLjk2MiAyMS44MDYgNTcuOTEtLjMwNyA4MC4wMjh6IiBpZD0iaiIvPjxmaWx0ZXIgeD0iLTEwLjIlIiB5PSItNi4zJSIgd2lkdGg9IjEyMC4zJSIgaGVpZ2h0PSIxMjAuMyUiIGZpbHRlclVuaXRzPSJvYmplY3RCb3VuZGluZ0JveCIgaWQ9ImkiPjxmZU9mZnNldCBkeT0iNSIgaW49IlNvdXJjZUFscGhhIiByZXN1bHQ9InNoYWRvd09mZnNldE91dGVyMSIvPjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjMuNSIgaW49InNoYWRvd09mZnNldE91dGVyMSIgcmVzdWx0PSJzaGFkb3dCbHVyT3V0ZXIxIi8+PGZlQ29sb3JNYXRyaXggdmFsdWVzPSIwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwIDAgMCAwLjAwNzE4NDIyMjAzIDAiIGluPSJzaGFkb3dCbHVyT3V0ZXIxIi8+PC9maWx0ZXI+PC9kZWZzPjxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoOCA0OCkiPjx1c2UgZmlsbD0iIzAwMCIgZmlsdGVyPSJ1cmwoI2EpIiB4bGluazpocmVmPSIjYiIvPjx1c2UgZmlsbD0iI0EwRThGRiIgeGxpbms6aHJlZj0iI2IiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoOCA0OCkiPjx1c2UgZmlsbD0iIzAwMCIgZmlsdGVyPSJ1cmwoI2MpIiB4bGluazpocmVmPSIjZCIvPjx1c2UgZmlsbD0iI0EwRThGRiIgeGxpbms6aHJlZj0iI2QiLz48L2c+PGcgb3BhY2l0eT0iLjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE5IDU5KSIgZmlsbD0iIzJGQzZGNiI+PHJlY3QgdHJhbnNmb3JtPSJtYXRyaXgoLTEgMCAwIDEgMTcgMCkiIHk9IjMiIHdpZHRoPSIxNyIgaGVpZ2h0PSI1IiByeD0iMi41Ii8+PHJlY3QgdHJhbnNmb3JtPSJtYXRyaXgoLTEgMCAwIDEgMTQgMCkiIHk9IjEzIiB3aWR0aD0iMTQiIGhlaWdodD0iNSIgcng9IjIuNSIvPjxyZWN0IG9wYWNpdHk9Ii44ODMiIHk9IjM0IiB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHJ4PSI2Ii8+PHJlY3Qgb3BhY2l0eT0iLjg4MyIgeD0iMTYiIHk9IjM0IiB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHJ4PSI2Ii8+PHBhdGggZD0iTTI3LjgxIDQ1LjQ5M2MtNC4zMy0zLjAwMi03LjQ1Mi03LjY5Ni04LjQ2LTEzLjE1NmE4IDggMCAxIDEgOC40NiAxMy4xNTZ6IiBvcGFjaXR5PSIuODgzIi8+PHJlY3QgeD0iMTQiIHdpZHRoPSI0OS42NTciIGhlaWdodD0iNyIgcng9IjMuNSIvPjxyZWN0IHg9IjE0IiB5PSIxNCIgd2lkdGg9IjQ5LjY1NyIgaGVpZ2h0PSI3IiByeD0iMy41Ii8+PC9nPjxnPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDc0IDIwKSI+PHVzZSBmaWxsPSIjMDAwIiBmaWx0ZXI9InVybCgjZSkiIHhsaW5rOmhyZWY9IiNmIi8+PHVzZSBmaWxsPSIjQzVGMDNGIiB4bGluazpocmVmPSIjZiIvPjwvZz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg3NCAyMCkiPjx1c2UgZmlsbD0iIzAwMCIgZmlsdGVyPSJ1cmwoI2cpIiB4bGluazpocmVmPSIjaCIvPjx1c2UgZmlsbD0iI0M1RjAzRiIgeGxpbms6aHJlZj0iI2giLz48L2c+PGcgb3BhY2l0eT0iLjUzNiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoODQgMzApIiBmaWxsPSIjOTRCODE3Ij48cmVjdCBvcGFjaXR5PSIuODgzIiB4PSIyIiB5PSIzOSIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiByeD0iOCIvPjxyZWN0IG9wYWNpdHk9Ii44ODMiIHg9IjI1IiB5PSIzOSIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2IiByeD0iOCIvPjxyZWN0IHg9IjMuNjU3IiB5PSIzIiB3aWR0aD0iNTkiIGhlaWdodD0iNyIgcng9IjMuNSIvPjxyZWN0IHg9IjMuNjU3IiB5PSIxNyIgd2lkdGg9IjY1IiBoZWlnaHQ9IjciIHJ4PSIzLjUiLz48cmVjdCB0cmFuc2Zvcm09Im1hdHJpeCgtMSAwIDAgMSAxNTAgMCkiIHg9IjYzIiB5PSI3IiB3aWR0aD0iMjQiIGhlaWdodD0iNSIgcng9IjIuNSIvPjxyZWN0IHRyYW5zZm9ybT0ibWF0cml4KC0xIDAgMCAxIDE1NC42ODYgMCkiIHg9IjY3LjM0MyIgeT0iMTciIHdpZHRoPSIyMCIgaGVpZ2h0PSI1IiByeD0iMi41Ii8+PC9nPjwvZz48ZyB0cmFuc2Zvcm09InJvdGF0ZSgtNDUgNjIuNzUxIDc2LjQwOCkiPjxwYXRoIGQ9Ik05MC42MzkgMzIuNjE4Yy0yNC4xNDQgMC00My44NDYgOS44NDctNDMuODQ2IDIyczE5LjY5NCAyMiA0NCAyMmMyNC4xNDQgMCA0NC05Ljg0NyA0NC0yMiAuMDA2LTEyLjE1My0xOS44NS0yMi00NC4xNTYtMjJoLjAwMnoiIGZpbGw9IiNGRkYiIGZpbGwtcnVsZT0ibm9uemVybyIgb3BhY2l0eT0iLjQzNyIvPjxyZWN0IGZpbGw9IiMxMEFEREYiIHRyYW5zZm9ybT0ibWF0cml4KDEgMCAwIC0xIDAgMzI2KSIgeD0iODciIHk9IjE1MyIgd2lkdGg9IjkiIGhlaWdodD0iMjAiIHJ4PSI0LjUiLz48ZyBmaWxsLXJ1bGU9Im5vbnplcm8iIHRyYW5zZm9ybT0icm90YXRlKDQ1IDkxLjEyOSA5MC42MDkpIj48dXNlIGZpbGw9IiMwMDAiIGZpbHRlcj0idXJsKCNpKSIgeGxpbms6aHJlZj0iI2oiLz48dXNlIGZpbGw9IiMyRkM2RjYiIHhsaW5rOmhyZWY9IiNqIi8+PC9nPjxwYXRoIGQ9Ik05MC45ODIgMzIuODA4Yy0zMS45Ni4wMDQtNTguMDQ1IDI1Ljg3OS01OC4wNSA1Ny44MDktLjAwMyAzMS45MyAyNi4wNjUgNTcuNzk4IDU4LjI0IDU3Ljc5NCAzMS45Ni0uMDA0IDU4LjI1LTI1Ljg3OSA1OC4yNTMtNTcuODA5LjAxMi0zMS45My0yNi4yNy01Ny43OTgtNTguNDQ1LTU3Ljc5NGguMDAyem0uMDE0IDExMS44MTNjLTI5Ljk4LjAwMy01NC40MjQtMjQuMjU1LTU0LjQyLTU0LjAwNS4wMDMtMjkuNzUgMjQuNDU0LTU0LjAxNCA1NC40MzMtNTQuMDE4IDI5Ljk3OS0uMDAzIDU0LjQyNCAyNC4yNTUgNTQuNDIgNTQuMDA1LS4wMTIgMjkuNzUtMjQuNDYzIDU0LjAxNC01NC40MzMgNTQuMDE4eiIgZmlsbC1vcGFjaXR5PSIuNDE3IiBmaWxsPSIjQThBREI0IiBmaWxsLXJ1bGU9Im5vbnplcm8iIG9wYWNpdHk9Ii40MTgiLz48cmVjdCBmaWxsPSIjQThBREI0IiB4PSI4MiIgeT0iMTY4IiB3aWR0aD0iMTkiIGhlaWdodD0iNjIiIHJ4PSI2Ii8+PHJlY3QgZmlsbD0iIzUyNUM2OSIgb3BhY2l0eT0iLjExNSIgeD0iODIiIHk9IjE2OCIgd2lkdGg9IjgiIGhlaWdodD0iNjIiIHJ4PSI0Ii8+PC9nPjwvZz48L3N2Zz4=');
+      background-repeat: no-repeat;
+      animation: crm-dedupe-wizard-start-icon-icon-animation .9s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+      opacity: 1;
+      z-index: 3;
+    }
+
+    .circle {
+      display: inline-block;
+      width: 247px;
+      height: 246px;
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQ3IDI0NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIzLjUgMjQ2QzU1LjI5MyAyNDYgMCAxOTAuOTMyIDAgMTIzIDAgNTUuMDY5IDU1LjI5MiAwIDEyMy41IDAgMTkxLjcwNyAwIDI0NyA1NS4wNjkgMjQ3IDEyM2MwIDY3LjkzMi01NS4yOTMgMTIzLTEyMy41IDEyM3ptMC00M2M0NC40NTkgMCA4MC41LTM1LjgxNyA4MC41LTgwcy0zNi4wNDEtODAtODAuNS04MEM3OS4wNCA0MyA0MyA3OC44MTcgNDMgMTIzczM2LjA0MSA4MCA4MC41IDgweiIgZmlsbD0iIzlDRTdGRiIgZmlsbC1ydWxlPSJub256ZXJvIiBvcGFjaXR5PSIuMjEyIi8+PC9zdmc+');
+      background-repeat: no-repeat;
+      animation: mercury-group 5s linear infinite;
+      opacity: 1;
+    }
+
+    #progressBar {
+      margin: 0 auto 59px auto;
+      width: 100%;
+      max-width: 421px;
+    }
+
+    .progressbar-column .progressbar-text-after {
+      padding: 0;
+      color: #828b95;
+      font-size: 12px;
+      order: 5;
+    }
+
+    .progressbar-column .progressbar-text-before {
+      padding: 0 0 3px;
+      font-size: 14px;
+      order: 1;
+    }
+
+    .progressbar-column .progressbar-status-percent {
+      color: #333;
+      font: 300 16px/20px "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      order: 2;
+    }
+
+    .progressbar-status,
+    .progressbar-status-percent,
+    .progressbar-text-after,
+    .progressbar-text-before {
+      padding: 0 17px;
+      color: #535c69;
+      font: 13px/16px "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+
+    .progressbar-column .progressbar-track {
+      margin: 11px 0 9px;
+      order: 3;
+    }
+
+    .progressbar-track {
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background-color: #edeef0;
+      transition: 250ms linear all;
+      order: 2;
+      flex: 1;
+    }
+
+    .progressbar-bar {
+      height: 8px;
+      border-radius: 4px;
+      background-color: #9dcf00;
+      transition: 120ms linear width;
+    }
+
+    .crm-dedupe-wizard-start-control-box {
+      margin-bottom: 37px;
+      height: 39px;
+      width: 100%;
+      text-align: center;
+    }
   </style>
 
   <title>app</title>
@@ -64,14 +191,104 @@
                   <p class="card-text">Найдено сущностей: <span class="entity-count">0</span></p>
                 </div>
                 <div class="col-auto ms-auto">
-                  <button class="btn btn-primary filter-button" disabled>Посмотреть</button>
+                  <button id="show-table" class="btn btn-primary filter-button" disabled>Посмотреть</button>
                 </div>
               </div>
               <div class="d-grid">
-                <button class="btn btn-danger filter-button" disabled>Удалить все</button>
+                <button id="delete-all" class="btn btn-danger filter-button"
+                  onclick="return dialog('Вы действительно хотите удалить?')" disabled>Удалить все</button>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="confirm" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+      aria-labelledby="confirm-title" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title" id="confirm-title">Подтверждение</h3>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary confirm-yes">Подтвердить</button>
+            <button type="button" class="btn btn-danger confirm-no">Отменить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="loader" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+      aria-labelledby="loader-title" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title" id="loader-title">Загрузка...</h3>
+          </div>
+          <div class="modal-body">
+            <div class="preloader">
+              <div class="">
+                <div class="arrows">
+                </div>
+                <div class="search">
+                </div>
+                <div class="circle">
+                </div>
+              </div>
+              <div class="crm-dedupe-wizard-start-control-box">
+                <div id="progressBar" class="crm-dedupe-wizard-status-bar">
+                  <div class="progressbar progressbar-success progressbar-column">
+                    <div class="progressbar-text-after"></div>
+                    <div class="progressbar-text-before"></div>
+                    <div class="progressbar-status-percent">Поиск</div>
+                    <div class="progressbar-track">
+                      <div class="progressbar-bar"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer m-0">
+            <div class="">
+              Осталось: ~<span class="approximate-timer">0</span>
+            </div>
+            <div class="ms-auto">
+              <button type="button" class="btn btn-danger" data-bs-dismiss="modal" disabled>Отменить</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="offcanvas offcanvas-end w-100 border-0" tabindex="-1" id="filter-offcanvas"
+      aria-labelledby="slider-title">
+      <div class="offcanvas-header justify-content-start">
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        <h3 id="slider-title" class="my-auto ms-3">Результаты поиска</h3>
+      </div>
+      <div class="offcanvas-body">
+        <div class="table-responsive">
+          <table id="filter-table" class="table table-bordered table-hover align-middle">
+            <thead>
+              <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Название</th>
+                <th scope="col">Ответственный</th>
+                <th scope="col">Дата создания</th>
+                <th scope="col"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">1</th>
+                <td>Заголовок</td>
+                <td>Пользователь</td>
+                <td>11.11.2022</td>
+                <th style="width: 7rem" class="text-center"><button type="button"
+                    class="btn btn-danger btn-sm">Удалить</button></th>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -105,7 +322,9 @@
         this.entityList;
       }
       async get(settings) {
-        let __method = settings.method || this.methods.list.method, __filter = settings.filter || this.methods.list.filter;
+        let __method = settings.method || this.methods.list.method,
+          __filter = settings.filter || this.methods.list.filter,
+          __callback = settings.callback || function () { };
         if (!__filter || !__method) return;
         let res = await this.client.call(__method, {
           order: settings.order || { 'ID': 'ASC' },
@@ -115,10 +334,12 @@
         });
         if (res.error()) throw 'Request error: ' + res.error();
         let local_entityList = res.data();
+        __callback(local_entityList.length);
         while (res.more()) {
           res = await this.client.next(res);
           if (res.error()) throw 'Request error: ' + res.error();
           local_entityList = local_entityList.concat(res.data());
+          __callback(local_entityList.length);
         }
         return this.entityList = local_entityList;
       }
@@ -222,13 +443,25 @@
       }
     }
 
+    //делает обратное
+    const TABLE = {
+      serializeLead: function (array) {
+        return array.map(e => ({ id: e.ID, title: e.TITLE, user: e.ASSIGNED_BY_ID, created: e.DATE_CREATE }));
+      },
+      serializeTask: function (array) {
+        return array.map(e => ({ id: e.ID, title: e.TITLE, user: e.RESPONSIBLE_ID, created: e.CREATED_DATE }));
+      },
+    }
+
     const ENTITIES = [
       {
         name: 'lead',
         label: 'Лид',
+        path: '/crm/lead/details/',
         new: function () {
           return new Entities({
             list: {
+              select: ['ID', 'DATE_CREATE', 'ASSIGNED_BY_ID', 'TITLE'],
               method: 'crm.lead.list',
             },
             delete: {
@@ -240,13 +473,18 @@
         serialize: function (query) {
           return SERIALIZE.serializeLead(query);
         },
+        table: function (array) {
+          return TABLE.serializeLead(array);
+        }
       },
       {
         name: 'company',
         label: 'Компания',
+        path: '/crm/company/details/',
         new: function () {
           return new Entities({
             list: {
+              select: ['ID', 'DATE_CREATE', 'ASSIGNED_BY_ID', 'TITLE'],
               method: 'crm.company.list',
             },
             delete: {
@@ -258,13 +496,18 @@
         serialize: function (query) {
           return SERIALIZE.serializeCompany(query);
         },
+        table: function (array) {
+          return TABLE.serializeLead(array);
+        }
       },
       {
         name: 'task',
         label: 'Задача',
+        path: '/tasks/task/view/',
         new: function () {
           return new Entities({
             list: {
+              select: ['ID', 'CREATED_DATE', 'RESPONSIBLE_ID', 'TITLE'],
               method: 'tasks.task.list',
             },
             delete: {
@@ -276,6 +519,9 @@
         serialize: function (query) {
           return SERIALIZE.serializeTask(query);
         },
+        table: function (array) {
+          return TABLE.serializeTask(array);
+        }
       },
     ];
 
@@ -302,6 +548,15 @@
     };
   </script>
   <script>//В этом блоке вся работа с DOM деревом
+    const APP = '#app',
+      FORM = '#filter-form',
+      SELECT_TYPE = '#select-entity',
+      FILTER = '#filter',
+      FILTER_MENU = '#filter-menu',
+      SHOW_TABLE = '#show-table',
+      DELETE_ALL = '#delete-all',
+      FILTER_TABLE = '#filter-table';
+    let table = [], page = 0, count = 0;
     /**
      * Блок с инициализаторами пикеров разных типов данных
      **/
@@ -370,12 +625,6 @@
     }
 
     const createUserPicker = async function (form, callback) {
-      const id = 'user-picker';
-      const parent = '#' + id;
-
-      $(form).find(parent).remove();
-      $(form).append(`<div id="${id}" class="mb-3 picker"></div>`);
-
       let res = await BX24Client.call('user.get', {});
       let users_list = res.data();
       while (res.more()) {
@@ -527,16 +776,37 @@
         });
       });
     }
-
     /**
      * Блок с инициализацией приложения и работой после прогрузки страницы
      **/
     $(document).ready(async function () {
-      const APP = '#app',
-        FORM = '#filter-form',
-        SELECT_TYPE = '#select-entity',
-        FILTER = '#filter',
-        FILTER_MENU = '#filter-menu';
+      const filterTableOffcanvas = new bootstrap.Offcanvas(document.getElementById('filter-offcanvas'));
+      const confirmModal = new bootstrap.Modal(document.getElementById('confirm'));
+      const loaderModal = new bootstrap.Modal(document.getElementById('loader'));
+
+      const dialog = function (text) {
+        return new Promise((complete, failed) => {
+          const modal = $('#confirm');
+          modal.find('.modal-body').text(text);
+          modal.find('.modal-footer > .confirm-yes').click(() => {
+            confirmModal.hide();
+            $('#loader').css('z-index', '');
+            complete(true);
+          });
+          modal.find('.modal-footer > .confirm-no').click(() => {
+            confirmModal.hide();
+            $('#loader').css('z-index', '');
+            complete(false);
+          });
+          modal.on('hidePrevented.bs.modal', () => {
+            confirmModal.hide();
+            $('#loader').css('z-index', '');
+            complete(false);
+          });
+          $('#loader').css('z-index', '1049');
+          confirmModal.show();
+        });
+      }
       /**
        * Эта функция передается в качестве обработчика нажатий на все пикеры, описанные в прошлом блоке
        * @param data = {
@@ -580,11 +850,49 @@
         const entity = ENTITIES.find(e => e.name === type);
         if (!entity) throw 'Unknow type of entity!';
         let __filter = entity.serialize(query), __client = entity.new();
-        let count = await __client.count({ filter: __filter });
+        count = await __client.count({ filter: __filter });
 
         $('.entity-type').text(entity.label);
         $('.entity-count').text(count);
         $('.filter-button').prop('disabled', false);
+      }
+
+      function updateApproximate(c) {
+        const timeot = 500, approximate = c * timeot;
+        let minutes = Math.floor(approximate / 60000);
+        let seconds = ((approximate % 60000) / 1000).toFixed(0);
+        $('.approximate-timer').text(`${Math.trunc(minutes)} мин. ${Math.trunc(seconds)} сек.`);
+      }
+
+      function generateTable(table) {
+        $(FILTER_TABLE).find('tbody').empty();
+        for (let t of table) {
+          $(FILTER_TABLE).find('tbody').append(`
+          <tr>
+            <th scope="row">${t.id}</th>
+            <td class="open-path" data-path="${t.path + t.id}/">${t.title}</td>
+            <td class="open-path" data-path="/company/personal/user/${t.user.id}/">
+              <img class="user-avatar rounded-circle" src="${t.user.photo}" alt="user avatar">
+              ${t.user.name}
+            </td>
+            <td>${new Date(t.created).toLocaleDateString('ru-RU')}</td>
+            <th style="width: 7rem" class="text-center">
+              <button type="button" class="btn btn-danger btn-sm delete-obj" data-id="${t.id}">Удалить</button>
+            </th>
+          </tr>`);
+        }
+        $('.open-path').click(function (e) {
+          const path = $(this).data('path');
+          if (!path) return;
+          BX24.openPath(
+            path,
+            function (result) {
+              if (result.result === 'error')
+                window.open('/' + path, '_blank').focus();
+            }
+          );
+        });
+        $(FILTER_TABLE).addClass('generated');
       }
 
       $(SELECT_TYPE).change(function () {
@@ -615,7 +923,78 @@
 
       $(FILTER_MENU).on('shown.bs.collapse hidden.bs.collapse', function (e) {
         BX24.resizeWindow($(APP).width(), $(APP).height(), (result) => { BX24.fitWindow(); });
-      })
+      });
+
+      $(SHOW_TABLE).click(async function () {
+        if ($(FILTER_TABLE).hasClass('generated')) return filterTableOffcanvas.show();
+        function timeout(ms) {
+          return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        $(this).prop('disabled', true);
+
+        const loader = $('#loader');
+        loader.find('.modal-title').text('Подготовка');
+        loader.find('.progressbar-bar').css('width', '0%')
+        loader.find('.progressbar-status-percent').text('Пользователи: 0%');
+
+        loaderModal.toggle();
+
+        let res = await BX24Client.call('user.get', {});
+        let users_list = res.data(), total = res.total();
+
+        let status = Math.trunc((users_list.length / total) * 100);
+        updateApproximate((total - users_list.length) / 50);
+        loader.find('.progressbar-bar').css('width', status + '%')
+        loader.find('.progressbar-status-percent').text('Пользователи: ' + status + '%');
+
+        while (res.more()) {
+          res = await BX24Client.next(res);
+          users_list = users_list.concat(res.data());
+
+          status = Math.trunc((users_list.length / total) * 100);
+          updateApproximate(Math.trunc((total - users_list.length) / 50));
+          loader.find('.progressbar-bar').css('width', status + '%')
+          loader.find('.progressbar-status-percent').text('Пользователи: ' + status + '%');
+        }
+        let serialize_users = users_list.map(e => ({
+          name: e.NAME && e.LAST_NAME ? e.NAME + ' ' + e.LAST_NAME : 'Не имени (id: ' + e.ID + ')',
+          id: e.ID,
+          photo: e.PERSONAL_PHOTO || './img/unknow-user.svg',
+        }));
+
+        loader.find('.modal-title').text('Получение сущностей');
+        loader.find('.progressbar-bar').css('width', '0%')
+        loader.find('.progressbar-status-percent').text('Сущности: 0%');
+        updateApproximate(Math.trunc(count / 50));
+
+        const entity = ENTITIES.find(e => e.name === $(SELECT_TYPE).val());
+        if (!entity) throw 'Unknow type of entity!';
+        let __filter = entity.serialize($(FORM).serializeObject()), __client = entity.new();
+        let table_res = await __client.get({
+          filter: __filter,
+          callback: function (c) {
+            status = Math.trunc((c / count) * 100);
+            updateApproximate(Math.trunc((count - c) / 50));
+            loader.find('.progressbar-bar').css('width', status + '%')
+            loader.find('.progressbar-status-percent').text('Сущности: ' + status + '%');
+          }
+        });
+        let serialize_table = entity.table(table_res);
+        table = serialize_table.map(e => ({
+          id: e.id,
+          title: e.title,
+          created: e.created,
+          user: serialize_users.find(u => u.id === e.user),
+          path: entity.path,
+        }));
+        generateTable(table);
+
+        await timeout(1000);
+        $(this).prop('disabled', false);
+        loaderModal.toggle();
+        return filterTableOffcanvas.show();
+      });
 
       $(SELECT_TYPE).trigger('change');
     });
