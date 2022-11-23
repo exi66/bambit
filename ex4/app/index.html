@@ -42,7 +42,7 @@
         <div class="col-12 my-3">
           <h2>Фильтр</h2>
           <div id="filter" class="form-select form-select-lg form-select-filter" data-bs-toggle="collapse"
-            data-bs-target="#filter-menu" aria-expanded="true" aria-controls="filter-menu">
+            data-bs-target="#filter-menu" aria-expanded="false" aria-controls="filter-menu">
             <div class="row">
               <div class="col-auto filter-card d-inline-flex p-0 my-1" data-target="#id-picker"></div>
               <div class="col-auto filter-card d-inline-flex p-0 my-1" data-target="#user-picker"></div>
@@ -51,14 +51,8 @@
               <div class="col-auto filter-card d-inline-flex p-0 my-1" data-target="#status-picker"></div>
             </div>
           </div>
-          <div class="collapse show" id="filter-menu">
-            <form class="p-4 w-100" id="filter-form" data-target="#filter">
-              <div id="id-picker" title="Идентификатор" class="mb-3 picker"></div>
-              <div id="user-picker" title="Ответственный" class="mb-3 picker"></div>
-              <div id="date-picker" title="Дата создания" class="mb-3 picker"></div>
-              <div id="name-picker" title="Название" class="mb-3 picker"></div>
-              <div id="status-picker" title="Статус" class="mb-3 picker"></div>
-            </form>
+          <div class="collapse" id="filter-menu">
+            <form class="p-4 w-100" id="filter-form" data-target="#filter"></form>
           </div>
         </div>
         <div class="col-12 my-3">
@@ -70,11 +64,11 @@
                   <p class="card-text">Найдено сущностей: <span class="entity-count">0</span></p>
                 </div>
                 <div class="col-auto ms-auto">
-                  <button class="btn btn-primary">Посмотреть</button>
+                  <button class="btn btn-primary filter-button" disabled>Посмотреть</button>
                 </div>
               </div>
               <div class="d-grid">
-                <button class="btn btn-danger">Удалить все</button>
+                <button class="btn btn-danger filter-button" disabled>Удалить все</button>
               </div>
             </div>
           </div>
@@ -87,7 +81,7 @@
 
     class Entities {
       //надо так же переделать в класс?
-      /** @property Object methods
+      /** @property methods
        * must be a Object like:
        * methods = {
        *   list: { //list method
@@ -170,23 +164,9 @@
     //   console.log(b);
     // }
 
-    const ENTITIES = {
-      lead: () => {
-        return new Entities({
-          list: {
-            method: 'crm.lead.list',
-          },
-          delete: {
-            method: 'crm.lead.delete',
-            param: 'id',
-          }
-        })
-      },
-    };
-
     //каждый из методов объекта представляет из себя соотвествующий своему типу преобразователь данных формы в filter для list метода
     //переделать в класс?
-    /** @property Object query
+    /** @param query
      * must be like obj {
      *    'users[]': [], //unset if empty
      *    title: String,
@@ -241,10 +221,62 @@
       }
     }
 
-    const declOfNum = function (number, titles) {
-      cases = [2, 0, 1, 1, 1, 2];
-      return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
-    }
+    const ENTITIES = [
+      {
+        name: 'lead',
+        label: 'Лид',
+        new: function () {
+          return new Entities({
+            list: {
+              method: 'crm.lead.list',
+            },
+            delete: {
+              method: 'crm.lead.delete',
+              param: 'id',
+            }
+          })
+        },
+        serialize: function (query) {
+          return SERIALIZE.serializeLead(query);
+        },
+      },
+      {
+        name: 'company',
+        label: 'Компания',
+        new: function () {
+          return new Entities({
+            list: {
+              method: 'crm.company.list',
+            },
+            delete: {
+              method: 'crm.company.delete',
+              param: 'id',
+            }
+          })
+        },
+        serialize: function (query) {
+          return SERIALIZE.serializeCompany(query);
+        },
+      },
+      {
+        name: 'task',
+        label: 'Задача',
+        new: function () {
+          return new Entities({
+            list: {
+              method: 'tasks.task.list',
+            },
+            delete: {
+              method: 'tasks.task.delete',
+              param: 'taskId',
+            }
+          })
+        },
+        serialize: function (query) {
+          return SERIALIZE.serializeTask(query);
+        },
+      },
+    ];
 
     //самописный обработчик формы, выплевывает ассоциативный объект
     //!!! выпленет массив только если обрабатываемый инпут имеет в названии [], например name="users[]" !!!
@@ -272,6 +304,10 @@
     /**
      * Блок с инициализаторами пикеров разных типов данных
      **/
+    function declOfNum(number, titles) {
+      cases = [2, 0, 1, 1, 1, 2];
+      return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
+    }
     function date2str(d) {
       return paddatepart(d.getDate()) + '.' + paddatepart(1 + d.getMonth()) + '.' + d.getFullYear();
     }
@@ -283,39 +319,109 @@
         new Date().toLocaleString('en-US', { timeZone: 'Europe/Moscow' })
       );
     }
-    const createUserPicker = async function (parent, callback) {
+
+    const createSelect = function (settings, callback) {
+      const id = settings.id;
+      const parent = '#' + id;
+
+      $(settings.form).find(parent).remove();
+      $(settings.form).append(`<div id="${id}" class="mb-3 picker"></div>`);
+
+      $(parent).append(`<label class="form-label w-100">${settings.label}:
+        <select class="filter-input task-status-select" name="${settings.name}[]" multiple="multiple"></select>
+      </label>`);
+      let status_select = $(parent).find(`.task-status-select`);
+      for (let status of settings.options) {
+        status_select.append(`
+        <option value="${status.value}">
+          ${status.label}
+        </option>`)
+      }
+      status_select.select2({ width: '100%' });
+      status_select.change(function (e) {
+        let value = $(e.target).val().length > 0 ?
+          `${$(e.target).val().length} ${declOfNum($(e.target).val().length, settings.titles)}` : //['статус', 'статуса', 'статусов']
+          null;
+        callback({
+          parent: parent,
+          name: 'status',
+          value: value,
+          label: `${settings.label}:`,
+        });
+      });
+    }
+
+    const createTaskStatusPicker = function (form, callback) {
+      let options = [
+        { value: 1, label: 'Новый' }, { value: 2, label: 'Ждет выполнения' }, 
+        { value: 3, label: 'Выполняется' }, { value: 4, label: 'Предположительно завершено' }, 
+        { value: 5, label: 'Завершена' }, { value: 6, label: 'Отложена' }, 
+        { value: 7, label: 'Отклонено' }
+      ];
+      createSelect({
+        form: form,
+        id: 'task-status-picker',
+        label: 'Статус задачи',
+        name: 'status',
+        titles: ['статус', 'статуса', 'статусов'],
+        options: options
+      }, callback);
+    }
+
+    const createUserPicker = async function (form, callback) {
+      const id = 'user-picker';
+      const parent = '#' + id;
+
+      $(form).find(parent).remove();
+      $(form).append(`<div id="${id}" class="mb-3 picker"></div>`);
+
       let res = await BX24Client.call('user.get', {});
       let users_list = res.data();
       while (res.more()) {
         res = await BX24Client.next(res);
         users_list = users_list.concat(res.data());
       }
-      $(parent).append(`<label class="form-label w-100">Ответственный:
-        <select class="filter-input users-select" name="users[]" multiple="multiple"></select>
-      </label>`);
-      let users_select = $(parent).find('.users-select');
-      for (let user of users_list) {
-        users_select.append(`
-        <option value="${user.ID}">
-          ${user.NAME && user.LAST_NAME ? user.NAME + ' ' + user.LAST_NAME : 'Нет имени (id: ' + user.ID + ')'}
-        </option>`)
-      }
-      users_select.select2({ width: '100%' });
-
-      users_select.change(function (e) {
-        let value = $(e.target).val().length > 0 ?
-          `${$(e.target).val().length} ${declOfNum($(e.target).val().length, ['пользователь', 'пользователя', 'пользователей'])}` :
-          null;
-        callback({
-          parent: parent,
-          name: 'users',
-          value: value,
-          label: 'Ответственный:',
-        });
-      });
+      let options = users_list.map(e => ({ value: e.ID, label: e.NAME && e.LAST_NAME ? e.NAME + ' ' + e.LAST_NAME : 'Нет имени (id: ' + e.ID + ')' }));
+      createSelect({
+        form: form,
+        id: 'user-picker',
+        label: 'Ответственный',
+        name: 'users',
+        titles: ['пользователь', 'пользователя', 'пользователей'],
+        options: options
+      }, callback);
     }
 
-    const createIdPicker = function (parent, callback) {
+    const createStatusPicker = async function (form, entity, callback) {
+      const ENTITY_ID = ['STATUS', 'SOURCE'];
+      if (!ENTITY_ID.includes(String(entity).toUpperCase())) throw 'This type of entity dont support!'
+      let res = await BX24Client.call('crm.status.list', {
+        order: { 'SORT': 'ASC' },
+        filter: { 'ENTITY_ID': String(entity).toUpperCase() }
+      });
+      let status_list = res.data();
+      while (res.more()) {
+        res = await BX24Client.next(res);
+        status_list = status_list.concat(res.data());
+      }
+      let options = status_list.map(e => ({ value: e.STATUS_ID, label: e.NAME || e.STATUS_ID }));
+      createSelect({
+        form: form,
+        id: 'status-picker',
+        label: 'Статус',
+        name: 'status',
+        titles: ['статус', 'статуса', 'статусов'],
+        options: options
+      }, callback);
+    }
+
+    const createIdPicker = function (form, callback) {
+      const id = 'id-picker';
+      const parent = '#' + id;
+
+      $(form).find(parent).remove();
+      $(form).append(`<div id="${id}" class="mb-3 picker"></div>`);
+
       $(parent).append(`<label class="form-label w-100">Идентификатор:
         <div class="d-flex">
           <label class="form-label text-start my-auto mx-2" for="min_id">От:</label>
@@ -344,7 +450,13 @@
       });
     }
 
-    const createDatePicker = function (parent, callback) {
+    const createDatePicker = function (form, callback) {
+      const id = 'date-picker';
+      const parent = '#' + id;
+
+      $(form).find(parent).remove();
+      $(form).append(`<div id="${id}" class="mb-3 picker"></div>`);
+
       $(parent).append(`<label class="form-label w-100">Дата создания:
         <div class="d-flex">
           <label class="form-label text-start my-auto mx-2" for="start_date">Начальная: </label>
@@ -396,7 +508,13 @@
       return { start: startDatePicker, end: endDatePicker };
     }
 
-    const createNamePicker = function (parent, callback) {
+    const createNamePicker = function (form, callback) {
+      const id = 'name-picker';
+      const parent = '#' + id;
+
+      $(form).find(parent).remove();
+      $(form).append(`<div id="${id}" class="mb-3 picker"></div>`);
+
       $(parent).append(`<label class="form-label" for="title">Название содержит:</label><input type="text" name="title" class="filter-input form-control">`);
       $(parent + ' .filter-input').change(function (e) {
         let label = $(parent + ' label[for="' + $(e.target).attr('name') + '"]').text();
@@ -409,49 +527,18 @@
       });
     }
 
-    const createStatusPicker = async function (parent, entity, callback) {
-      const ENTITY_ID = ['STATUS', 'SOURCE', 'TASK'];
-      if (!ENTITY_ID.includes(String(entity).toUpperCase())) throw 'This type of entity dont support!'
-      let res = await BX24Client.call('crm.status.list', {
-        order: { 'SORT': 'ASC' },
-        filter: { 'ENTITY_ID': String(entity).toUpperCase() }
-      });
-      let status_list = res.data();
-      while (res.more()) {
-        res = await BX24Client.next(res);
-        status_list = status_list.concat(res.data());
-      }
-      $(parent).append(`<label class="form-label w-100">Статус:
-        <select class="filter-input ${String(entity).toLocaleLowerCase()}-select" name="status[]" multiple="multiple"></select>
-      </label>`);
-      let status_select = $(parent).find(`.${String(entity).toLocaleLowerCase()}-select`);
-      for (let status of status_list) {
-        status_select.append(`
-        <option value="${status.STATUS_ID}">
-          ${status.NAME || status.STATUS_ID}
-        </option>`)
-      }
-      status_select.select2({ width: '100%' });
-      status_select.change(function (e) {
-        let value = $(e.target).val().length > 0 ?
-          `${$(e.target).val().length} ${declOfNum($(e.target).val().length, ['статус', 'статуса', 'статусов'])}` :
-          null;
-        callback({
-          parent: parent,
-          name: 'status',
-          value: value,
-          label: 'Статус:',
-        });
-      });
-    }
-
     /**
      * Блок с инициализацией приложения и работой после прогрузки страницы
      **/
     $(document).ready(async function () {
+      const APP = '#app',
+        FORM = '#filter-form',
+        SELECT_TYPE = '#select-entity',
+        FILTER = '#filter',
+        FILTER_MENU = '#filter-menu';
       /**
        * Эта функция передается в качестве обработчика нажатий на все пикеры, описанные в прошлом блоке
-       * @property data = {
+       * @param data = {
        *    parent: String, //общий враппер, указанный при создании
        *    name: String, //name атрибут инпута
        *    value: String || Array || Integer.., //значение
@@ -460,7 +547,7 @@
        **/
       function callback(data) {
         if (!data) return;
-        let parent = $('#filter').find('.filter-card[data-target="' + data.parent + '"]');
+        let parent = $(FILTER).find('.filter-card[data-target="' + data.parent + '"]');
         parent.find('#' + data.name + '-wrapper').remove();
         if (data.value) {
           parent.append(`<div id="${data.name}-wrapper" class="input-wrapper px-1 mx-1 my-auto badge text-bg-primary">
@@ -468,33 +555,67 @@
             <span class="value-wrapper">${data.value}</span>
           </div>`);
         }
-        updateCount();
-        BX24.resizeWindow($("#app").width(), $("#app").height(), (result) => {
-          BX24.fitWindow();
-        });
+        updateData($(SELECT_TYPE).val(), $(FORM).serializeObject());
+        //при вводе данных фильтр становится больше и требуется изменение размера
+        BX24.resizeWindow($(APP).width(), $(APP).height(), (result) => { BX24.fitWindow(); });
       }
 
-      async function updateCount() {
-        let type = $('#select-entity').val(), query = $('#filter-form').serializeObject(), count = 0, ___filter = {}, entity = {};
-        //? переделать в свитч?
-        if (type === 'lead') {
-          entity = ENTITIES.lead();
-          ___filter = SERIALIZE.serializeLead(query);
-        } else throw 'Unknow type on entity!';
-        count = await entity.count({ filter: ___filter });
+      /**
+       * Эта функция вызываетася каждый раз при изменении каких-то пользовательских данных
+       * @param type String
+       * @param query Object like {
+       *    'users[]': [], //unset if empty
+       *    title: String,
+       *    min_id: String,
+       *    max_id: max_id,
+       *    start_date: String (like dd.mm.yyyy),
+       *    end_date: String (like dd.mm.yyyy),
+       *    'status[]': [], //unset if empty
+       * }
+       **/
+      async function updateData(type, query) {
+        $('.filter-button').prop('disabled', true);
+
+        const entity = ENTITIES.find(e => e.name === type);
+        if (!entity) throw 'Unknow type of entity!';
+        let __filter = entity.serialize(query), __client = entity.new();
+        let count = await __client.count({ filter: __filter });
+
+        $('.entity-type').text(entity.label);
         $('.entity-count').text(count);
+        $('.filter-button').prop('disabled', false);
       }
 
-      await createUserPicker('#user-picker', callback);
-      createIdPicker('#id-picker', callback);
-      createDatePicker('#date-picker', callback);
-      createNamePicker('#name-picker', callback);
-      await createStatusPicker('#status-picker', 'STATUS', callback);
-
-      BX24.resizeWindow($("#app").width(), $("#app").height(), (result) => {
-        BX24.fitWindow();
-        $('#filter-menu').collapse('hide');
+      $(SELECT_TYPE).change(function () {
+        const type = $(this).val();
+        $(FORM).empty();
+        $('.filter-card').empty();
+        if (type === 'lead') {
+          createIdPicker(FORM, callback);
+          createDatePicker(FORM, callback);
+          createUserPicker(FORM, callback);
+          createNamePicker(FORM, callback);
+          createStatusPicker(FORM, 'STATUS', callback);
+        } else if (type === 'task') {
+          createIdPicker(FORM, callback);
+          createDatePicker(FORM, callback);
+          createUserPicker(FORM, callback);
+          createNamePicker(FORM, callback);
+          createTaskStatusPicker(FORM, callback)
+        } else if (type === 'company') {
+          createIdPicker(FORM, callback);
+          createDatePicker(FORM, callback);
+          createUserPicker(FORM, callback);
+          createNamePicker(FORM, callback);
+        } else return;
+        updateData(type, $(FORM).serializeObject());
       });
+
+      $(FILTER_MENU).on('shown.bs.collapse hidden.bs.collapse', function (e) {
+        BX24.resizeWindow($(APP).width(), $(APP).height(), (result) => { BX24.fitWindow(); });
+      })
+
+      $(SELECT_TYPE).trigger('change');
     });
   </script>
 </body>
