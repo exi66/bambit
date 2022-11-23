@@ -205,8 +205,8 @@
         if (query.title) ___filter.TITLE = query.title;
         if (query.min_id) ___filter['>ID'] = parseInt(query.min_id);
         if (query.max_id) ___filter['<ID'] = parseInt(query.max_id);
-        if (query.start_date) ___filter['>DATE_CREATE'] = this.date2str(query.start_date) + 'T00:00:00';
-        if (query.end_date) ___filter['<DATE_CREATE'] = this.date2str(query.end_date) + 'T23:59:59';
+        if (query.start_date) ___filter['>CREATED_DATE'] = this.date2str(query.start_date) + 'T00:00:00';
+        if (query.end_date) ___filter['<CREATED_DATE'] = this.date2str(query.end_date) + 'T23:59:59';
         if (query['status[]']) ___filter.REAL_STATUS = query['status[]'];
         return ___filter;
       },
@@ -590,6 +590,7 @@
         const type = $(this).val();
         $(FORM).empty();
         $('.filter-card').empty();
+        $(FILTER_MENU).collapse('hide');
         if (type === 'lead') {
           createIdPicker(FORM, callback);
           createDatePicker(FORM, callback);
