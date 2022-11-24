@@ -22,6 +22,10 @@
       min-height: 3.25rem;
     }
 
+    .open-path {
+      cursor: pointer;
+    }
+
     .user-avatar {
       width: 2rem;
       height: 2rem;
@@ -267,6 +271,7 @@
         <h3 id="slider-title" class="my-auto ms-3">Результаты поиска</h3>
       </div>
       <div class="offcanvas-body">
+        <div class="pagination-wrapper"></div>
         <div class="table-responsive">
           <table id="filter-table" class="table table-bordered table-hover align-middle">
             <thead>
@@ -290,6 +295,7 @@
             </tbody>
           </table>
         </div>
+        <div class="pagination-wrapper"></div>
       </div>
     </div>
   </main>
@@ -298,7 +304,7 @@
     BX24.init(BX24.getAuth());
 
     class Entities {
-      //надо так же переделать в класс?
+      //?надо так же переделать в класс?
       /** @property methods
        * must be a Object like:
        * methods = {
@@ -387,7 +393,7 @@
     // }
 
     //каждый из методов объекта представляет из себя соотвествующий своему типу преобразователь данных формы в filter для list метода
-    //переделать в класс?
+    //?переделать в класс?
     /** @param query
      * must be like obj {
      *    'users[]': [], //unset if empty
@@ -453,13 +459,222 @@
       },
     }
 
+    const FIELDS = {
+      form: '#filter-form',
+      callback: function () { },
+      createTaskStatusPicker: function () {
+        let options = [
+          { value: 1, label: 'Новый' }, { value: 2, label: 'Ждет выполнения' },
+          { value: 3, label: 'Выполняется' }, { value: 4, label: 'Предположительно завершено' },
+          { value: 5, label: 'Завершена' }, { value: 6, label: 'Отложена' },
+          { value: 7, label: 'Отклонено' }
+        ];
+        this.createSelect({
+          form: this.form,
+          id: 'task-status-picker',
+          label: 'Статус задачи',
+          name: 'status',
+          titles: ['статус', 'статуса', 'статусов'],
+          options: options
+        });
+      },
+      createUserPicker: async function () {
+        let res = await BX24Client.call('user.get', {});
+        let users_list = res.data();
+        while (res.more()) {
+          res = await BX24Client.next(res);
+          users_list = users_list.concat(res.data());
+        }
+        let options = users_list.map(e => ({ value: e.ID, label: e.NAME && e.LAST_NAME ? e.NAME + ' ' + e.LAST_NAME : 'Нет имени (id: ' + e.ID + ')' }));
+        this.createSelect({
+          form: this.form,
+          id: 'user-picker',
+          label: 'Ответственный',
+          name: 'users',
+          titles: ['пользователь', 'пользователя', 'пользователей'],
+          options: options
+        });
+      },
+      createStatusPicker: async function () {
+        let res = await BX24Client.call('crm.status.list', {
+          order: { 'SORT': 'ASC' },
+          filter: { 'ENTITY_ID': 'STATUS' }
+        });
+        let status_list = res.data();
+        while (res.more()) {
+          res = await BX24Client.next(res);
+          status_list = status_list.concat(res.data());
+        }
+        let options = status_list.map(e => ({ value: e.STATUS_ID, label: e.NAME || e.STATUS_ID }));
+        this.createSelect({
+          form: this.form,
+          id: 'status-picker',
+          label: 'Статус',
+          name: 'status',
+          titles: ['статус', 'статуса', 'статусов'],
+          options: options
+        });
+      },
+      createIdPicker: function () {
+        const self = this, id = 'id-picker', parent = '#' + id;
+
+        $(this.form).find(parent).remove();
+        $(this.form).append(`<div id="${id}" class="mb-3 picker"></div>`);
+
+        $(parent).append(`<label class="form-label w-100">Идентификатор:
+        <div class="d-flex">
+          <label class="form-label text-start my-auto mx-2" for="min_id">От:</label>
+          <input type="number" name="min_id" class="filter-input form-control" min="0">
+          <label class="form-label text-start my-auto mx-2" for="max_id">До:</label>
+          <input type="number" name="max_id" class="filter-input form-control" min="0">
+        </div>
+      </label>`);
+        let min_id = $('input[name="min_id"]');
+        let max_id = $('input[name="max_id"]');
+        min_id.change(function (e) {
+          max_id.attr('min', $(e.target).val());
+        });
+        max_id.change(function (e) {
+          min_id.attr('max', $(e.target).val());
+        });
+
+        $(parent + ' .filter-input').change(function (e) {
+          let label = $(parent + ' label[for="' + $(e.target).attr('name') + '"]').text();
+          self.callback({
+            parent: parent,
+            name: $(e.target).attr('name'),
+            value: $(e.target).val(),
+            label: label,
+          });
+        });
+      },
+      createDatePicker: function () {
+        const self = this, id = 'date-picker', parent = '#' + id;
+
+        $(this.form).find(parent).remove();
+        $(this.form).append(`<div id="${id}" class="mb-3 picker"></div>`);
+
+        $(parent).append(`<label class="form-label w-100">Дата создания:
+        <div class="d-flex">
+          <label class="form-label text-start my-auto mx-2" for="start_date">Начальная: </label>
+          <input type="text" name="start_date" class="filter-input form-control" readonly>
+          <label class="form-label text-start my-auto mx-2" for="end_date">Конечная: </label>
+          <input type="text" name="end_date" class="filter-input form-control" readonly>
+        </div>
+      </label>`);
+        let startDatePicker = new AirDatepicker(parent + ' input[name="start_date"]', {
+          minDate: new Date(1),
+          buttons: ['clear'],
+          multipleDates: false,
+          dateFormat(date) {
+            return self.date2str(date);
+          },
+          onSelect({ date }) {
+            endDatePicker.update({
+              minDate: date,
+            });
+            let value = date ? self.date2str(date) : null;
+            self.callback({
+              parent: parent,
+              name: "start_date",
+              value: value,
+              label: 'Начальная:',
+            });
+          }
+        });
+        let endDatePicker = new AirDatepicker(parent + ' input[name="end_date"]', {
+          maxDate: this.dateInMoscow(),
+          buttons: ['clear'],
+          multipleDates: false,
+          dateFormat(date) {
+            return self.date2str(date);
+          },
+          onSelect({ date }) {
+            startDatePicker.update({
+              maxDate: date,
+            });
+            let value = date ? self.date2str(date) : null;
+            self.callback({
+              parent: parent,
+              name: "end_date",
+              value: value,
+              label: 'Конечная:',
+            });
+          }
+        });
+        return { start: startDatePicker, end: endDatePicker };
+      },
+      createNamePicker: function () {
+        const self = this, id = 'name-picker', parent = '#' + id;
+
+        $(this.form).find(parent).remove();
+        $(this.form).append(`<div id="${id}" class="mb-3 picker"></div>`);
+
+        $(parent).append(`<label class="form-label" for="title">Название содержит:</label><input type="text" name="title" class="filter-input form-control">`);
+        $(parent + ' .filter-input').change(function (e) {
+          let label = $(parent + ' label[for="' + $(e.target).attr('name') + '"]').text();
+          self.callback({
+            parent: parent,
+            name: $(e.target).attr('name'),
+            value: $(e.target).val(),
+            label: label,
+          });
+        });
+      },
+      //вспомогательные функции
+      declOfNum: function (number, titles) {
+        cases = [2, 0, 1, 1, 1, 2];
+        return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
+      },
+      date2str: function (d) {
+        return this.paddatepart(d.getDate()) + '.' + this.paddatepart(1 + d.getMonth()) + '.' + d.getFullYear();
+      },
+      paddatepart: function (part) {
+        return part >= 10 ? part.toString() : '0' + part.toString();
+      },
+      dateInMoscow: function () {
+        return new Date(
+          new Date().toLocaleString('en-US', { timeZone: 'Europe/Moscow' })
+        );
+      },
+      createSelect: function (settings) {
+        const self = this, id = settings.id, parent = '#' + id;
+
+        $(settings.form).find(parent).remove();
+        $(settings.form).append(`<div id="${id}" class="mb-3 picker"></div>`);
+
+        $(parent).append(`<label class="form-label w-100">${settings.label}:
+        <select class="filter-input task-status-select" name="${settings.name}[]" multiple="multiple"></select>
+      </label>`);
+        let status_select = $(parent).find(`.task-status-select`);
+        for (let status of settings.options) {
+          status_select.append(`
+        <option value="${status.value}">
+          ${status.label}
+        </option>`)
+        }
+        status_select.select2({ width: '100%' });
+        status_select.change(function (e) {
+          let value = $(e.target).val().length > 0 ?
+            `${$(e.target).val().length} ${self.declOfNum($(e.target).val().length, settings.titles)}` : null;
+          self.callback({
+            parent: parent,
+            name: 'status',
+            value: value,
+            label: `${settings.label}:`,
+          });
+        });
+      },
+    }
+
     const ENTITIES = [
       {
         name: 'lead',
         label: 'Лид',
         path: '/crm/lead/details/',
+        entity: {},
         new: function () {
-          return new Entities({
+          return this.entity = new Entities({
             list: {
               select: ['ID', 'DATE_CREATE', 'ASSIGNED_BY_ID', 'TITLE'],
               method: 'crm.lead.list',
@@ -468,21 +683,29 @@
               method: 'crm.lead.delete',
               param: 'id',
             }
-          })
+          });
         },
         serialize: function (query) {
           return SERIALIZE.serializeLead(query);
         },
         table: function (array) {
           return TABLE.serializeLead(array);
+        },
+        fields: function () {
+          FIELDS.createIdPicker();
+          FIELDS.createDatePicker();
+          FIELDS.createUserPicker();
+          FIELDS.createNamePicker();
+          FIELDS.createStatusPicker();
         }
       },
       {
         name: 'company',
         label: 'Компания',
         path: '/crm/company/details/',
+        entity: {},
         new: function () {
-          return new Entities({
+          return this.entity = new Entities({
             list: {
               select: ['ID', 'DATE_CREATE', 'ASSIGNED_BY_ID', 'TITLE'],
               method: 'crm.company.list',
@@ -491,21 +714,28 @@
               method: 'crm.company.delete',
               param: 'id',
             }
-          })
+          });
         },
         serialize: function (query) {
           return SERIALIZE.serializeCompany(query);
         },
         table: function (array) {
           return TABLE.serializeLead(array);
+        },
+        fields: function () {
+          FIELDS.createIdPicker();
+          FIELDS.createDatePicker();
+          FIELDS.createUserPicker();
+          FIELDS.createNamePicker();
         }
       },
       {
         name: 'task',
         label: 'Задача',
         path: '/tasks/task/view/',
+        entity: {},
         new: function () {
-          return new Entities({
+          return this.entity = new Entities({
             list: {
               select: ['ID', 'CREATED_DATE', 'RESPONSIBLE_ID', 'TITLE'],
               method: 'tasks.task.list',
@@ -514,13 +744,20 @@
               method: 'tasks.task.delete',
               param: 'taskId',
             }
-          })
+          });
         },
         serialize: function (query) {
           return SERIALIZE.serializeTask(query);
         },
         table: function (array) {
           return TABLE.serializeTask(array);
+        },
+        fields: function () {
+          FIELDS.createIdPicker();
+          FIELDS.createDatePicker();
+          FIELDS.createUserPicker();
+          FIELDS.createNamePicker();
+          FIELDS.createTaskStatusPicker();
         }
       },
     ];
@@ -548,455 +785,356 @@
     };
   </script>
   <script>//В этом блоке вся работа с DOM деревом
-    const APP = '#app',
-      FORM = '#filter-form',
-      SELECT_TYPE = '#select-entity',
-      FILTER = '#filter',
-      FILTER_MENU = '#filter-menu',
-      SHOW_TABLE = '#show-table',
-      DELETE_ALL = '#delete-all',
-      FILTER_TABLE = '#filter-table';
-    let table = [], page = 0, count = 0;
-    /**
-     * Блок с инициализаторами пикеров разных типов данных
-     **/
-    function declOfNum(number, titles) {
-      cases = [2, 0, 1, 1, 1, 2];
-      return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
-    }
-    function date2str(d) {
-      return paddatepart(d.getDate()) + '.' + paddatepart(1 + d.getMonth()) + '.' + d.getFullYear();
-    }
-    function paddatepart(part) {
-      return part >= 10 ? part.toString() : '0' + part.toString();
-    }
-    function dateInMoscow() {
-      return new Date(
-        new Date().toLocaleString('en-US', { timeZone: 'Europe/Moscow' })
-      );
-    }
-
-    const createSelect = function (settings, callback) {
-      const id = settings.id;
-      const parent = '#' + id;
-
-      $(settings.form).find(parent).remove();
-      $(settings.form).append(`<div id="${id}" class="mb-3 picker"></div>`);
-
-      $(parent).append(`<label class="form-label w-100">${settings.label}:
-        <select class="filter-input task-status-select" name="${settings.name}[]" multiple="multiple"></select>
-      </label>`);
-      let status_select = $(parent).find(`.task-status-select`);
-      for (let status of settings.options) {
-        status_select.append(`
-        <option value="${status.value}">
-          ${status.label}
-        </option>`)
-      }
-      status_select.select2({ width: '100%' });
-      status_select.change(function (e) {
-        let value = $(e.target).val().length > 0 ?
-          `${$(e.target).val().length} ${declOfNum($(e.target).val().length, settings.titles)}` : //['статус', 'статуса', 'статусов']
-          null;
-        callback({
-          parent: parent,
-          name: 'status',
-          value: value,
-          label: `${settings.label}:`,
-        });
-      });
-    }
-
-    const createTaskStatusPicker = function (form, callback) {
-      let options = [
-        { value: 1, label: 'Новый' }, { value: 2, label: 'Ждет выполнения' },
-        { value: 3, label: 'Выполняется' }, { value: 4, label: 'Предположительно завершено' },
-        { value: 5, label: 'Завершена' }, { value: 6, label: 'Отложена' },
-        { value: 7, label: 'Отклонено' }
-      ];
-      createSelect({
-        form: form,
-        id: 'task-status-picker',
-        label: 'Статус задачи',
-        name: 'status',
-        titles: ['статус', 'статуса', 'статусов'],
-        options: options
-      }, callback);
-    }
-
-    const createUserPicker = async function (form, callback) {
-      let res = await BX24Client.call('user.get', {});
-      let users_list = res.data();
-      while (res.more()) {
-        res = await BX24Client.next(res);
-        users_list = users_list.concat(res.data());
-      }
-      let options = users_list.map(e => ({ value: e.ID, label: e.NAME && e.LAST_NAME ? e.NAME + ' ' + e.LAST_NAME : 'Нет имени (id: ' + e.ID + ')' }));
-      createSelect({
-        form: form,
-        id: 'user-picker',
-        label: 'Ответственный',
-        name: 'users',
-        titles: ['пользователь', 'пользователя', 'пользователей'],
-        options: options
-      }, callback);
-    }
-
-    const createStatusPicker = async function (form, entity, callback) {
-      const ENTITY_ID = ['STATUS', 'SOURCE'];
-      if (!ENTITY_ID.includes(String(entity).toUpperCase())) throw 'This type of entity dont support!'
-      let res = await BX24Client.call('crm.status.list', {
-        order: { 'SORT': 'ASC' },
-        filter: { 'ENTITY_ID': String(entity).toUpperCase() }
-      });
-      let status_list = res.data();
-      while (res.more()) {
-        res = await BX24Client.next(res);
-        status_list = status_list.concat(res.data());
-      }
-      let options = status_list.map(e => ({ value: e.STATUS_ID, label: e.NAME || e.STATUS_ID }));
-      createSelect({
-        form: form,
-        id: 'status-picker',
-        label: 'Статус',
-        name: 'status',
-        titles: ['статус', 'статуса', 'статусов'],
-        options: options
-      }, callback);
-    }
-
-    const createIdPicker = function (form, callback) {
-      const id = 'id-picker';
-      const parent = '#' + id;
-
-      $(form).find(parent).remove();
-      $(form).append(`<div id="${id}" class="mb-3 picker"></div>`);
-
-      $(parent).append(`<label class="form-label w-100">Идентификатор:
-        <div class="d-flex">
-          <label class="form-label text-start my-auto mx-2" for="min_id">От:</label>
-          <input type="number" name="min_id" class="filter-input form-control" min="0">
-          <label class="form-label text-start my-auto mx-2" for="max_id">До:</label>
-          <input type="number" name="max_id" class="filter-input form-control" min="0">
-        </div>
-      </label>`);
-      let min_id = $('input[name="min_id"]');
-      let max_id = $('input[name="max_id"]');
-      min_id.change(function (e) {
-        max_id.attr('min', $(e.target).val());
-      });
-      max_id.change(function (e) {
-        min_id.attr('max', $(e.target).val());
-      });
-
-      $(parent + ' .filter-input').change(function (e) {
-        let label = $(parent + ' label[for="' + $(e.target).attr('name') + '"]').text();
-        callback({
-          parent: parent,
-          name: $(e.target).attr('name'),
-          value: $(e.target).val(),
-          label: label,
-        });
-      });
-    }
-
-    const createDatePicker = function (form, callback) {
-      const id = 'date-picker';
-      const parent = '#' + id;
-
-      $(form).find(parent).remove();
-      $(form).append(`<div id="${id}" class="mb-3 picker"></div>`);
-
-      $(parent).append(`<label class="form-label w-100">Дата создания:
-        <div class="d-flex">
-          <label class="form-label text-start my-auto mx-2" for="start_date">Начальная: </label>
-          <input type="text" name="start_date" class="filter-input form-control" readonly>
-          <label class="form-label text-start my-auto mx-2" for="end_date">Конечная: </label>
-          <input type="text" name="end_date" class="filter-input form-control" readonly>
-        </div>
-      </label>`);
-      let startDatePicker = new AirDatepicker(parent + ' input[name="start_date"]', {
-        minDate: new Date(1),
-        buttons: ['clear'],
-        multipleDates: false,
-        dateFormat(date) {
-          return date2str(date);
-        },
-        onSelect({ date }) {
-          endDatePicker.update({
-            minDate: date,
-          });
-          let value = date ? date2str(date) : null;
-          callback({
-            parent: parent,
-            name: "start_date",
-            value: value,
-            label: 'Начальная:',
-          });
-        }
-      });
-      let endDatePicker = new AirDatepicker(parent + ' input[name="end_date"]', {
-        maxDate: dateInMoscow(),
-        buttons: ['clear'],
-        multipleDates: false,
-        dateFormat(date) {
-          return date2str(date);
-        },
-        onSelect({ date }) {
-          startDatePicker.update({
-            maxDate: date,
-          });
-          let value = date ? date2str(date) : null;
-          callback({
-            parent: parent,
-            name: "end_date",
-            value: value,
-            label: 'Конечная:',
-          });
-        }
-      });
-      return { start: startDatePicker, end: endDatePicker };
-    }
-
-    const createNamePicker = function (form, callback) {
-      const id = 'name-picker';
-      const parent = '#' + id;
-
-      $(form).find(parent).remove();
-      $(form).append(`<div id="${id}" class="mb-3 picker"></div>`);
-
-      $(parent).append(`<label class="form-label" for="title">Название содержит:</label><input type="text" name="title" class="filter-input form-control">`);
-      $(parent + ' .filter-input').change(function (e) {
-        let label = $(parent + ' label[for="' + $(e.target).attr('name') + '"]').text();
-        callback({
-          parent: parent,
-          name: $(e.target).attr('name'),
-          value: $(e.target).val(),
-          label: label,
-        });
-      });
-    }
     /**
      * Блок с инициализацией приложения и работой после прогрузки страницы
      **/
     $(document).ready(async function () {
-      const filterTableOffcanvas = new bootstrap.Offcanvas(document.getElementById('filter-offcanvas'));
-      const confirmModal = new bootstrap.Modal(document.getElementById('confirm'));
-      const loaderModal = new bootstrap.Modal(document.getElementById('loader'));
 
-      const dialog = function (text) {
-        return new Promise((complete, failed) => {
-          const modal = $('#confirm');
-          modal.find('.modal-body').text(text);
-          modal.find('.modal-footer > .confirm-yes').click(() => {
-            confirmModal.hide();
-            $('#loader').css('z-index', '');
-            complete(true);
-          });
-          modal.find('.modal-footer > .confirm-no').click(() => {
-            confirmModal.hide();
-            $('#loader').css('z-index', '');
-            complete(false);
-          });
-          modal.on('hidePrevented.bs.modal', () => {
-            confirmModal.hide();
-            $('#loader').css('z-index', '');
-            complete(false);
-          });
-          $('#loader').css('z-index', '1049');
-          confirmModal.show();
-        });
-      }
-      /**
-       * Эта функция передается в качестве обработчика нажатий на все пикеры, описанные в прошлом блоке
-       * @param data = {
-       *    parent: String, //общий враппер, указанный при создании
-       *    name: String, //name атрибут инпута
-       *    value: String || Array || Integer.., //значение
-       *    label: String //значение лейбла, у которого в for указан нейм инпута
-       * }
-       **/
-      function callback(data) {
-        if (!data) return;
-        let parent = $(FILTER).find('.filter-card[data-target="' + data.parent + '"]');
-        parent.find('#' + data.name + '-wrapper').remove();
-        if (data.value) {
-          parent.append(`<div id="${data.name}-wrapper" class="input-wrapper px-1 mx-1 my-auto badge text-bg-primary">
-            <span class="label-wrapper">${data.label || 'Не задан'}</span>
-            <span class="value-wrapper">${data.value}</span>
-          </div>`);
-        }
-        updateData($(SELECT_TYPE).val(), $(FORM).serializeObject());
-        //при вводе данных фильтр становится больше и требуется изменение размера
-        BX24.resizeWindow($(APP).width(), $(APP).height(), (result) => { BX24.fitWindow(); });
-      }
+      const app = {
 
-      /**
-       * Эта функция вызываетася каждый раз при изменении каких-то пользовательских данных
-       * @param type String
-       * @param query Object like {
-       *    'users[]': [], //unset if empty
-       *    title: String,
-       *    min_id: String,
-       *    max_id: max_id,
-       *    start_date: String (like dd.mm.yyyy),
-       *    end_date: String (like dd.mm.yyyy),
-       *    'status[]': [], //unset if empty
-       * }
-       **/
-      async function updateData(type, query) {
-        $('.filter-button').prop('disabled', true);
+        entity: {},
+        query: {},
+        count: 0,
 
-        const entity = ENTITIES.find(e => e.name === type);
-        if (!entity) throw 'Unknow type of entity!';
-        let __filter = entity.serialize(query), __client = entity.new();
-        count = await __client.count({ filter: __filter });
+        html: '#app',
 
-        $('.entity-type').text(entity.label);
-        $('.entity-count').text(count);
-        $('.filter-button').prop('disabled', false);
-      }
+        selectType: '#select-entity',
+        filter: '#filter',
+        form: '#filter-form',
+        filterMenu: '#filter-menu',
+        showTable: '#show-table',
+        deleteAll: '#delete-all',
+        filterTable: '#filter-table',
+        tableOffcanvas: '#filter-offcanvas',
+        confirmModal: '#confirm',
 
-      function updateApproximate(c) {
-        const timeot = 500, approximate = c * timeot;
-        let minutes = Math.floor(approximate / 60000);
-        let seconds = ((approximate % 60000) / 1000).toFixed(0);
-        $('.approximate-timer').text(`${Math.trunc(minutes)} мин. ${Math.trunc(seconds)} сек.`);
-      }
+        filterCardsClass: 'filter-card',
 
-      function generateTable(table) {
-        $(FILTER_TABLE).find('tbody').empty();
-        for (let t of table) {
-          $(FILTER_TABLE).find('tbody').append(`
-          <tr>
-            <th scope="row">${t.id}</th>
-            <td class="open-path" data-path="${t.path + t.id}/">${t.title}</td>
-            <td class="open-path" data-path="/company/personal/user/${t.user.id}/">
-              <img class="user-avatar rounded-circle" src="${t.user.photo}" alt="user avatar">
-              ${t.user.name}
-            </td>
-            <td>${new Date(t.created).toLocaleDateString('ru-RU')}</td>
-            <th style="width: 7rem" class="text-center">
-              <button type="button" class="btn btn-danger btn-sm delete-obj" data-id="${t.id}">Удалить</button>
-            </th>
-          </tr>`);
-        }
-        $('.open-path').click(function (e) {
-          const path = $(this).data('path');
-          if (!path) return;
-          BX24.openPath(
-            path,
-            function (result) {
-              if (result.result === 'error')
-                window.open('/' + path, '_blank').focus();
+        init: async function () {
+          const self = this;
+
+          this.bs.init();
+          FIELDS.callback = function (data) { //тут надо тоже вынести классы
+            if (!data) return;
+            const parent = $(self.filter).find(`.${self.filterCardsClass}[data-target="${data.parent}"]`);
+            parent.find('#' + data.name + '-wrapper').remove();
+            if (data.value) {
+              parent.append(`<div id="${data.name}-wrapper" class="input-wrapper px-1 mx-1 my-auto badge text-bg-primary">
+              <span class="label-wrapper">${data.label || 'Не задан'}</span>
+              <span class="value-wrapper">${data.value}</span>
+            </div>`);
             }
-          );
-        });
-        $(FILTER_TABLE).addClass('generated');
+            self.updateData();
+          }
+
+          $(this.selectType).change(function () {
+            const type = $(this).val();
+
+            $(self.form).empty();
+            $('.' + self.filterCardsClass).empty();
+            $(self.filterMenu).collapse('hide');
+
+            self.entity = ENTITIES.find(e => e.name === type);
+            if (!self.entity) throw 'Unknow type of entity!';
+            self.entity.fields();
+
+            self.updateData();
+          });
+
+          $(this.filterMenu).on('shown.bs.collapse hidden.bs.collapse', function (e) {
+            self.fitWindow();
+          });
+
+          $(this.showTable).click(async function () {
+            if (!self.table.expired) return self.table.show(self);
+
+            $(this).prop('disabled', true);
+
+            self.loader.update({
+              title: 'Подготовка',
+              progress: 0,
+              progress_title: 'Пользователи: 0%'
+            });
+            self.loader.show(self);
+
+            let res = await BX24Client.call('user.get', {});
+            let users_list = res.data(), total = res.total(), status = Math.trunc((users_list.length / total) * 100);
+
+            self.loader.update({
+              progress: status,
+              progress_title: 'Пользователи: ' + status + '%',
+              request_count: Math.trunc((total - users_list.length) / 50)
+            });
+
+            while (res.more()) {
+              res = await BX24Client.next(res);
+              users_list = users_list.concat(res.data()), status = Math.trunc((users_list.length / total) * 100);
+
+              self.loader.update({
+                progress: status,
+                progress_title: 'Пользователи: ' + status + '%',
+                request_count: Math.trunc((total - users_list.length) / 50)
+              });
+            }
+
+            let serialize_users = users_list.map(e => ({
+              name: e.NAME && e.LAST_NAME ? e.NAME + ' ' + e.LAST_NAME : 'Не имени (id: ' + e.ID + ')',
+              id: e.ID,
+              photo: e.PERSONAL_PHOTO || './img/unknow-user.svg',
+            }));
+
+            self.loader.update({
+              title: 'Получение сущностей',
+              progress: 0,
+              progress_title: 'Сущности: 0%',
+              request_count: Math.trunc(self.count / 50)
+            });
+
+            let __filter = self.entity.serialize(self.query), __client = self.entity.new();
+            let table_res = await __client.get({
+              filter: __filter,
+              callback: function (c) {
+                let status = Math.trunc((c / self.count) * 100);
+                self.loader.update({
+                  progress: status,
+                  progress_title: 'Сущности: ' + status + '%',
+                  request_count: Math.trunc((self.count - c) / 50)
+                });
+              }
+            });
+            let serialize_table = self.entity.table(table_res);
+            let result_table = serialize_table.map(e => ({
+              id: e.id,
+              title: e.title,
+              created: e.created,
+              user: serialize_users.find(u => u.id === e.user),
+              path: self.entity.path,
+            }));
+
+            self.table.init(result_table);
+
+            await timeout(1000);
+
+            $(this).prop('disabled', false);
+            self.loader.hide(self);
+            return self.table.show(self);
+
+            //костыль на слип для бутстраповского оффканваса
+            function timeout(ms) {
+              return new Promise(resolve => setTimeout(resolve, ms));
+            }
+          });
+          $(this.selectType).trigger('change');
+        },
+        fitWindow: function () {
+          BX24.resizeWindow($(this.html).width(), $(this.html).height(), (result) => { BX24.fitWindow(); });
+        },
+        updateData: async function () { //тут надо тоже вынести классы
+          $('.filter-button').prop('disabled', true);
+
+          this.query = $(this.form).serializeObject();
+          this.table.expired = true;
+
+          let __filter = this.entity.serialize(this.query), __client = this.entity.new();
+          this.count = await __client.count({ filter: __filter });
+
+          $('.entity-type').text(this.entity.label);
+          $('.entity-count').text(this.count);
+          $('.filter-button').prop('disabled', false);
+        },
+        dialog: async function (text) { //тут надо тоже вынести классы
+          if (!this.bs.confirmModal) this.bs.init();
+          return new Promise((complete, failed) => {
+            const modal = $(this.confirmModal);
+            modal.find('.modal-body').text(text);
+            modal.find('.modal-footer > .confirm-yes').click(() => {
+              this.bs.confirmModal.hide();
+              $(this.loader.html).css('z-index', '');
+              complete(true);
+            });
+            modal.find('.modal-footer > .confirm-no').click(() => {
+              this.bs.confirmModal.hide();
+              $(this.loader.html).css('z-index', '');
+              complete(false);
+            });
+            modal.on('hidePrevented.bs.modal', () => {
+              this.bs.confirmModal.hide();
+              $(this.loader.html).css('z-index', '');
+              complete(false);
+            });
+            $(this.loader.html).css('z-index', '1049');
+            this.bs.confirmModal.show();
+          });
+        },
+        loader: {
+          html: '#loader',
+
+          titleClass: 'modal-title',
+          progressbarClass: 'progressbar-bar',
+          progressbarTitleClass: 'progressbar-status-percent',
+          approximateClass: 'approximate-timer',
+
+          update: function (settings) {
+            if (settings.title) $(this.html).find('.' + this.titleClass).text(settings.title);
+            if (settings.progress) $(this.html).find('.' + this.progressbarClass).css('width', settings.progress + '%')
+            if (settings.progress_title) $(this.html).find('.' + this.progressbarTitleClass).text(settings.progress_title);
+            if (settings.request_count) this.updateApproximate(settings.request_count);
+          },
+          updateApproximate: function (c) {
+            const timeot = 500, approximate = c * timeot;
+            let minutes = Math.floor(approximate / 60000);
+            let seconds = ((approximate % 60000) / 1000).toFixed(0);
+            $(this.html).find('.' + this.approximateClass).text(`${Math.trunc(minutes)} мин. ${Math.trunc(seconds)} сек.`);
+          },
+          show: function (parent) {
+            parent.bs.loaderModal.show();
+          },
+          hide: function (parent) {
+            parent.bs.loaderModal.hide();
+          },
+        },
+        bs: {
+          tableOffcanvas: {},
+          confirmModal: {},
+          loaderModal: {},
+          init: function () {
+            this.tableOffcanvas = new bootstrap.Offcanvas(document.getElementById('filter-offcanvas'));
+            this.confirmModal = new bootstrap.Modal(document.getElementById('confirm'));
+            this.loaderModal = new bootstrap.Modal(document.getElementById('loader'));
+          }
+        },
+        table: {
+          html: '#filter-table',
+          data: [],
+          pages_data: [],
+          page: 0,
+          page_size: 50,
+          expired: true,
+          step_size: 4,
+
+          buttonsWrapperClass: 'actions-wrapper',
+          deleteButtonClass: 'delete-obj',
+          openPathClass: 'open-path',
+          paginationWrapperClass: 'pagination-wrapper',
+          gotoPageClass: 'goto-page',
+          gotoNextPageClass: 'goto-next',
+          gotoPrevPageClass: 'goto-prev',
+          gotoFirstPageClass: 'goto-first',
+          gotoLastPageClass: 'goto-last',
+          userAvatarClass: 'user-avatar',
+
+          init: function (__table) {
+            this.data = __table;
+            this.page = 0;
+            let local_table = JSON.parse(JSON.stringify(__table)), result = [], length = this.page_size;
+            while (local_table.length) result.push(local_table.splice(0, length));
+            this.pages_data = result;
+            if (result.length > 1) this.createPagination();
+            this.createTable();
+            this.expired = false;
+          },
+          show: function (parent) {
+            parent.bs.tableOffcanvas.show();
+          },
+          hide: function (parent) {
+            parent.bs.tableOffcanvas.show();
+          },
+          createTable: function () {
+            $(this.html).find('tbody').empty();
+            for (let t of this.pages_data[this.page]) {
+              $(this.html).find('tbody').append(`
+                <tr>
+                  <th scope="row">${t.id}</th>
+                  <td class="${this.openPathClass} link-primary" data-path="${t.path + t.id}/">${t.title}</td>
+                  <td class="${this.openPathClass} link-primary" data-path="/company/personal/user/${t.user.id}/">
+                    <img class="${this.userAvatarClass} rounded-circle" src="${t.user.photo}" alt="user avatar">
+                    ${t.user.name}
+                  </td>
+                  <td>${new Date(t.created).toLocaleDateString('ru-RU')}</td>
+                  <th style="width: 7rem" class="text-center ${this.buttonsWrapperClass}">
+                    <button type="button" class="btn btn-danger btn-sm ${this.deleteButtonClass}" data-id="${t.id}">Удалить</button>
+                  </th>
+                </tr>`);
+            }
+            $('.' + this.deleteButtonClass).click(async function () {
+              // $(this).prop('disabled', true);
+              // const id = parseInt($(this).attr('data-id'));
+              // const flag = await dialog('Вы действительно хотите удалить сущность с id: ' + id + '?');
+              // if (!flag) return $(this).prop('disabled', false);
+              // $(this).html(`<div class="spinner-border spinner-border-sm" role="status">
+              //     <span class="visually-hidden">Удаление...</span>
+              //   </div>`)
+            });
+            $('.' + this.openPathClass).click(function (e) {
+              const path = $(this).data('path');
+              if (!path) return;
+              BX24.openPath(
+                path,
+                function (result) {
+                  if (result.result === 'error')
+                    window.open(document.referrer + path, '_blank').focus(); //?не уверен как получить родительский домен из iframe, не проверял
+                }
+              );
+            });
+          },
+          createPagination: function () {
+            const self = this, step_size = this.step_size;
+            $('.' + this.paginationWrapperClass).empty();
+
+            let local_page = this.page, start_offset = 0, end_offset = 0;
+            if (this.pages_data.length - (local_page + step_size + 1) < 0) start_offset = -(this.pages_data.length - (local_page + step_size + 1));
+            if (local_page - step_size < 0) end_offset = -(local_page - step_size);
+
+            $('.' + this.paginationWrapperClass).append(`
+              <ul class="pagination">
+                <li class="page-item"><button class="page-link ${this.gotoFirstPageClass}" aria-label="Первая"><span aria-hidden="true">&laquo;&laquo;</span></button></li>
+                <li class="page-item"><button class="page-link ${this.gotoPrevPageClass}" aria-label="Предыдущая"><span aria-hidden="true">&laquo;</span></button></li>
+              </ul>`);
+            for (let i = Math.max(0, this.page - step_size - start_offset); i <= Math.min(this.pages_data.length - 1, local_page + step_size + end_offset); i++) {
+              $('.' + this.paginationWrapperClass).find('.pagination').append(`
+              <li class="page-item"><button class="page-link ${this.gotoPageClass} ${i == this.page ? 'active' : ''}" page="${i}">${i + 1}</button></li>`);
+            }
+            $('.' + this.paginationWrapperClass).find('.pagination').append(`
+              <li class="page-item"><button class="page-link ${this.gotoNextPageClass}" aria-label="Следующая"><span aria-hidden="true">&raquo;</span></button></li>
+              <li class="page-item"><button class="page-link ${this.gotoLastPageClass}" aria-label="Последняя"><span aria-hidden="true">&raquo;&raquo;</span></button></li>`);
+            $('.' + this.gotoNextPageClass).prop('disabled', this.page === this.pages_data.length - 1);
+            $('.' + this.gotoPrevPageClass).prop('disabled', this.page === 0);
+            $('.' + this.gotoLastPageClass).prop('disabled', this.page === this.pages_data.length - 1);
+            $('.' + this.gotoFirstPageClass).prop('disabled', this.page === 0);
+            $('.' + this.gotoPageClass).click(function () {
+              const local_page = parseInt($(this).attr('page'));
+              if (local_page >= 0 && local_page <= self.pages_data.length - 1) {
+                self.page = local_page;
+                return self.changePage();
+              }
+            });
+            $('.' + this.gotoNextPageClass).click(function () {
+              if (self.page >= self.pages_data.length - 1) self.page = self.pages_data.length - 1
+              else self.page++;
+              return self.changePage();
+            });
+            $('.' + this.gotoPrevPageClass).click(function () {
+              if (self.page < 1) self.page = 0;
+              else self.page--;
+              return self.changePage();
+            });
+            $('.' + this.gotoLastPageClass).click(function () {
+              self.page = self.pages_data.length - 1;
+              return self.changePage();
+            });
+            $('.' + this.gotoFirstPageClass).click(function () {
+              self.page = 0;
+              return self.changePage();
+            });
+          },
+          changePage: function () {
+            this.createTable();
+            this.createPagination();
+          },
+        }
       }
 
-      $(SELECT_TYPE).change(function () {
-        const type = $(this).val();
-        $(FORM).empty();
-        $('.filter-card').empty();
-        $(FILTER_MENU).collapse('hide');
-        if (type === 'lead') {
-          createIdPicker(FORM, callback);
-          createDatePicker(FORM, callback);
-          createUserPicker(FORM, callback);
-          createNamePicker(FORM, callback);
-          createStatusPicker(FORM, 'STATUS', callback);
-        } else if (type === 'task') {
-          createIdPicker(FORM, callback);
-          createDatePicker(FORM, callback);
-          createUserPicker(FORM, callback);
-          createNamePicker(FORM, callback);
-          createTaskStatusPicker(FORM, callback)
-        } else if (type === 'company') {
-          createIdPicker(FORM, callback);
-          createDatePicker(FORM, callback);
-          createUserPicker(FORM, callback);
-          createNamePicker(FORM, callback);
-        } else return;
-        updateData(type, $(FORM).serializeObject());
-      });
-
-      $(FILTER_MENU).on('shown.bs.collapse hidden.bs.collapse', function (e) {
-        BX24.resizeWindow($(APP).width(), $(APP).height(), (result) => { BX24.fitWindow(); });
-      });
-
-      $(SHOW_TABLE).click(async function () {
-        if ($(FILTER_TABLE).hasClass('generated')) return filterTableOffcanvas.show();
-        function timeout(ms) {
-          return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-        $(this).prop('disabled', true);
-
-        const loader = $('#loader');
-        loader.find('.modal-title').text('Подготовка');
-        loader.find('.progressbar-bar').css('width', '0%')
-        loader.find('.progressbar-status-percent').text('Пользователи: 0%');
-
-        loaderModal.toggle();
-
-        let res = await BX24Client.call('user.get', {});
-        let users_list = res.data(), total = res.total();
-
-        let status = Math.trunc((users_list.length / total) * 100);
-        updateApproximate((total - users_list.length) / 50);
-        loader.find('.progressbar-bar').css('width', status + '%')
-        loader.find('.progressbar-status-percent').text('Пользователи: ' + status + '%');
-
-        while (res.more()) {
-          res = await BX24Client.next(res);
-          users_list = users_list.concat(res.data());
-
-          status = Math.trunc((users_list.length / total) * 100);
-          updateApproximate(Math.trunc((total - users_list.length) / 50));
-          loader.find('.progressbar-bar').css('width', status + '%')
-          loader.find('.progressbar-status-percent').text('Пользователи: ' + status + '%');
-        }
-        let serialize_users = users_list.map(e => ({
-          name: e.NAME && e.LAST_NAME ? e.NAME + ' ' + e.LAST_NAME : 'Не имени (id: ' + e.ID + ')',
-          id: e.ID,
-          photo: e.PERSONAL_PHOTO || './img/unknow-user.svg',
-        }));
-
-        loader.find('.modal-title').text('Получение сущностей');
-        loader.find('.progressbar-bar').css('width', '0%')
-        loader.find('.progressbar-status-percent').text('Сущности: 0%');
-        updateApproximate(Math.trunc(count / 50));
-
-        const entity = ENTITIES.find(e => e.name === $(SELECT_TYPE).val());
-        if (!entity) throw 'Unknow type of entity!';
-        let __filter = entity.serialize($(FORM).serializeObject()), __client = entity.new();
-        let table_res = await __client.get({
-          filter: __filter,
-          callback: function (c) {
-            status = Math.trunc((c / count) * 100);
-            updateApproximate(Math.trunc((count - c) / 50));
-            loader.find('.progressbar-bar').css('width', status + '%')
-            loader.find('.progressbar-status-percent').text('Сущности: ' + status + '%');
-          }
-        });
-        let serialize_table = entity.table(table_res);
-        table = serialize_table.map(e => ({
-          id: e.id,
-          title: e.title,
-          created: e.created,
-          user: serialize_users.find(u => u.id === e.user),
-          path: entity.path,
-        }));
-        generateTable(table);
-
-        await timeout(1000);
-        $(this).prop('disabled', false);
-        loaderModal.toggle();
-        return filterTableOffcanvas.show();
-      });
-
-      $(SELECT_TYPE).trigger('change');
+      await app.init();
     });
   </script>
 </body>
