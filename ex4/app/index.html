@@ -324,7 +324,7 @@
           throw 'methods prop must be a Object!'
         }
         this.methods = methods;
-        this.client = new BX24Wrapper();
+        this.client = BX24Client;
         this.entityList;
       }
       async get(settings) {
@@ -360,7 +360,7 @@
         if (res.error()) throw 'Request error: ' + res.error();
         return res.total();
       }
-      async delete() {
+      async deleteAll() {
         if (!this.entityList) return;
         let local_entityList = JSON.parse(JSON.stringify(!this.entityList)), result = [], length = 50;
         while (local_entityList.length) result.push(local_entityList.splice(0, length));
@@ -374,6 +374,15 @@
         for (let page of cmds) {
           await this.client.callBatch(page);
         }
+      }
+      async delete(settings) {
+        let __method = settings.method || this.methods.delete.method,
+          __id = settings.id,
+          __param = settings.param || this.methods.delete.param;
+        if (!__method || !__id || !__param) return;
+        let res = await this.client.call(__method, { [__param]: __id });
+        if (res.error()) throw 'Request error: ' + res.error();
+        return res.data();
       }
     }
     //пример использования
@@ -826,6 +835,7 @@
             }
             self.updateData();
           }
+          FIELDS.form = this.form;
 
           $(this.selectType).change(function () {
             const type = $(this).val();
@@ -911,7 +921,7 @@
               path: self.entity.path,
             }));
 
-            self.table.init(result_table);
+            self.table.init(result_table, self);
 
             await timeout(1000);
 
@@ -1023,14 +1033,14 @@
           gotoLastPageClass: 'goto-last',
           userAvatarClass: 'user-avatar',
 
-          init: function (__table) {
+          init: function (__table, parent) {
             this.data = __table;
             this.page = 0;
             let local_table = JSON.parse(JSON.stringify(__table)), result = [], length = this.page_size;
             while (local_table.length) result.push(local_table.splice(0, length));
             this.pages_data = result;
             if (result.length > 1) this.createPagination();
-            this.createTable();
+            this.createTable(parent);
             this.expired = false;
           },
           show: function (parent) {
@@ -1039,7 +1049,7 @@
           hide: function (parent) {
             parent.bs.tableOffcanvas.show();
           },
-          createTable: function () {
+          createTable: function (parent) {
             $(this.html).find('tbody').empty();
             for (let t of this.pages_data[this.page]) {
               $(this.html).find('tbody').append(`
@@ -1057,13 +1067,24 @@
                 </tr>`);
             }
             $('.' + this.deleteButtonClass).click(async function () {
-              // $(this).prop('disabled', true);
-              // const id = parseInt($(this).attr('data-id'));
-              // const flag = await dialog('Вы действительно хотите удалить сущность с id: ' + id + '?');
-              // if (!flag) return $(this).prop('disabled', false);
-              // $(this).html(`<div class="spinner-border spinner-border-sm" role="status">
-              //     <span class="visually-hidden">Удаление...</span>
-              //   </div>`)
+              $(this).prop('disabled', true);
+              const id = parseInt($(this).attr('data-id')), flag = await parent.dialog('Вы действительно хотите удалить сущность с id: ' + id + '?');
+              if (!flag) return $(this).prop('disabled', false);
+              $(this).html(`<div class="spinner-border spinner-border-sm" role="status">
+                  <span class="visually-hidden">Удаление...</span>
+                </div>`);
+              let client = parent.entity.new();
+              try {
+                await client.delete({ id: id });
+              } catch (e) {
+                console.error(e);
+                $(this).html('Ошибка!');
+                return $(this).prop('disabled', false);
+              }
+              $(this).html('Удален');
+              $(this).removeClass('btn-danger');
+              $(this).addClass('btn-secondary');
+              $(this).parent().parent().addClass('opacity-50');
             });
             $('.' + this.openPathClass).click(function (e) {
               const path = $(this).data('path');
@@ -1072,7 +1093,7 @@
                 path,
                 function (result) {
                   if (result.result === 'error')
-                    window.open(document.referrer + path, '_blank').focus(); //?не уверен как получить родительский домен из iframe, не проверял
+                    window.open(document.referrer + path, '_blank').focus();
                 }
               );
             });
