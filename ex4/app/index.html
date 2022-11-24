@@ -26,9 +26,50 @@
       cursor: pointer;
     }
 
+    .th-sort-table {
+      -webkit-user-select: none;
+      /* Safari */
+      -ms-user-select: none;
+      /* IE 10 and IE 11 */
+      user-select: none;
+      /* Standard syntax */
+      cursor: pointer;
+    }
+
+    .th-sort-table:hover {
+      background-color: rgba(160, 190, 255, 0.5);
+    }
+
+    .th-sort-table.active {
+      background-color: rgba(10, 88, 200, 0.3);
+    }
+
+    .th-sort-table.active.forward:after {
+      display: inline-block;
+      margin-left: 0.255em;
+      vertical-align: 0.255em;
+      content: "";
+      border-top: 0.3em solid;
+      border-right: 0.3em solid transparent;
+      border-bottom: 0;
+      border-left: 0.3em solid transparent;
+    }
+
+    .th-sort-table.active.reverse:after {
+      display: inline-block;
+      margin-left: 0.255em;
+      vertical-align: 0.255em;
+      content: "";
+      border-top: 0;
+      border-right: 0.3em solid transparent;
+      border-bottom: 0.3em solid;
+      border-left: 0.3em solid transparent;
+    }
+
     .user-avatar {
       width: 2rem;
       height: 2rem;
+      background-color: black;
     }
 
     .preloader {
@@ -189,7 +230,7 @@
         <div class="col-12 my-3">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Сущность: <span class="entity-type">Лид</span></h5>
+              <h3 class="card-title">Сущность: <span class="entity-type">Лид</span></h3>
               <div class="row my-1">
                 <div class="col my-auto">
                   <p class="card-text">Найдено сущностей: <span class="entity-count">0</span></p>
@@ -199,8 +240,7 @@
                 </div>
               </div>
               <div class="d-grid">
-                <button id="delete-all" class="btn btn-danger filter-button"
-                  onclick="return dialog('Вы действительно хотите удалить?')" disabled>Удалить все</button>
+                <button id="delete-all" class="btn btn-danger filter-button" disabled>Удалить все</button>
               </div>
             </div>
           </div>
@@ -271,15 +311,19 @@
         <h3 id="slider-title" class="my-auto ms-3">Результаты поиска</h3>
       </div>
       <div class="offcanvas-body">
+        <p class="fw-bold">
+          Сущность: <span class="entity-type">Лид</span><br>
+          Найдено: <span class="entity-count">0</span>
+        </p>
         <div class="pagination-wrapper"></div>
         <div class="table-responsive">
           <table id="filter-table" class="table table-bordered table-hover align-middle">
             <thead>
-              <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Название</th>
-                <th scope="col">Ответственный</th>
-                <th scope="col">Дата создания</th>
+              <tr class="sort-wrapper">
+                <th scope="col" class="th-sort-table active reverse" data-target="id" data-type="integer">ID</th>
+                <th scope="col" class="th-sort-table" data-target="title" data-type="string">Название</th>
+                <th scope="col" class="th-sort-table" data-target="user" data-type="string">Ответственный</th>
+                <th scope="col" class="th-sort-table" data-target="created" data-type="date">Дата создания</th>
                 <th scope="col"></th>
               </tr>
             </thead>
@@ -329,22 +373,24 @@
       }
       async get(settings) {
         let __method = settings.method || this.methods.list.method,
+          __wrapper = settings.wrapper || this.methods.list.wrapper,
           __filter = settings.filter || this.methods.list.filter,
+          __select = settings.select || this.methods.list.select,
           __callback = settings.callback || function () { };
         if (!__filter || !__method) return;
         let res = await this.client.call(__method, {
           order: settings.order || { 'ID': 'ASC' },
           filter: __filter,
-          select: settings.select || this.methods.list.select || ['ID'],
+          select: __select || ['ID'],
           start: -1,
         });
         if (res.error()) throw 'Request error: ' + res.error();
-        let local_entityList = res.data();
+        let local_entityList = __wrapper ? res.data()[__wrapper] : res.data();
         __callback(local_entityList.length);
         while (res.more()) {
           res = await this.client.next(res);
           if (res.error()) throw 'Request error: ' + res.error();
-          local_entityList = local_entityList.concat(res.data());
+          local_entityList = local_entityList.concat(__wrapper ? res.data()[__wrapper] : res.data());
           __callback(local_entityList.length);
         }
         return this.entityList = local_entityList;
@@ -464,7 +510,7 @@
         return array.map(e => ({ id: e.ID, title: e.TITLE, user: e.ASSIGNED_BY_ID, created: e.DATE_CREATE }));
       },
       serializeTask: function (array) {
-        return array.map(e => ({ id: e.ID, title: e.TITLE, user: e.RESPONSIBLE_ID, created: e.CREATED_DATE }));
+        return array.map(e => ({ id: e.id, title: e.title, user: e.responsibleId, created: e.createdDate }));
       },
     }
 
@@ -741,13 +787,14 @@
       {
         name: 'task',
         label: 'Задача',
-        path: '/tasks/task/view/',
+        path: '/company/personal/user/0/tasks/task/view/', //?я не знаю как открыть по другому в слайдере
         entity: {},
         new: function () {
           return this.entity = new Entities({
             list: {
               select: ['ID', 'CREATED_DATE', 'RESPONSIBLE_ID', 'TITLE'],
               method: 'tasks.task.list',
+              wrapper: 'tasks',
             },
             delete: {
               method: 'tasks.task.delete',
@@ -837,6 +884,19 @@
           }
           FIELDS.form = this.form;
 
+          $('.' + this.table.sortButtonClass).click(function () {
+            const reverse = $(this).hasClass('reverse'),
+              target = $(this).attr('data-target'),
+              type = $(this).attr('data-type');
+
+            $('.' + self.table.sortButtonClass).removeClass('forward reverse active');
+            $(this).addClass('active');
+            if (!reverse) $(this).addClass('reverse');
+            else $(this).addClass('forward');
+
+            self.table.sortTable(self, reverse, target, type);
+          });
+
           $(this.selectType).change(function () {
             const type = $(this).val();
 
@@ -888,7 +948,7 @@
             }
 
             let serialize_users = users_list.map(e => ({
-              name: e.NAME && e.LAST_NAME ? e.NAME + ' ' + e.LAST_NAME : 'Не имени (id: ' + e.ID + ')',
+              name: e.NAME && e.LAST_NAME ? e.NAME + ' ' + e.LAST_NAME : 'Нет имени (id: ' + e.ID + ')',
               id: e.ID,
               photo: e.PERSONAL_PHOTO || './img/unknow-user.svg',
             }));
@@ -912,12 +972,13 @@
                 });
               }
             });
+
             let serialize_table = self.entity.table(table_res);
             let result_table = serialize_table.map(e => ({
               id: e.id,
               title: e.title,
               created: e.created,
-              user: serialize_users.find(u => u.id === e.user),
+              user: serialize_users.find(u => u.id === e.user) || { name: 'Не найден', id: -1, photo: './img/unknow-user.svg' },
               path: self.entity.path,
             }));
 
@@ -951,6 +1012,8 @@
           $('.entity-type').text(this.entity.label);
           $('.entity-count').text(this.count);
           $('.filter-button').prop('disabled', false);
+
+          this.fitWindow();
         },
         dialog: async function (text) { //тут надо тоже вынести классы
           if (!this.bs.confirmModal) this.bs.init();
@@ -1032,14 +1095,16 @@
           gotoFirstPageClass: 'goto-first',
           gotoLastPageClass: 'goto-last',
           userAvatarClass: 'user-avatar',
+          sortButtonClass: 'th-sort-table',
 
           init: function (__table, parent) {
+            const self = this;
             this.data = __table;
             this.page = 0;
             let local_table = JSON.parse(JSON.stringify(__table)), result = [], length = this.page_size;
             while (local_table.length) result.push(local_table.splice(0, length));
             this.pages_data = result;
-            if (result.length > 1) this.createPagination();
+            if (result.length > 1) this.createPagination(parent);
             this.createTable(parent);
             this.expired = false;
           },
@@ -1050,13 +1115,14 @@
             parent.bs.tableOffcanvas.show();
           },
           createTable: function (parent) {
+            const self = this;
             $(this.html).find('tbody').empty();
             for (let t of this.pages_data[this.page]) {
               $(this.html).find('tbody').append(`
                 <tr>
                   <th scope="row">${t.id}</th>
                   <td class="${this.openPathClass} link-primary" data-path="${t.path + t.id}/">${t.title}</td>
-                  <td class="${this.openPathClass} link-primary" data-path="/company/personal/user/${t.user.id}/">
+                  <td class="${t.user.id !== -1 ? this.openPathClass : ''} link-primary" ${t.user.id !== -1 ? `data-path="/company/personal/user/${t.user.id}/"` : ''}>
                     <img class="${this.userAvatarClass} rounded-circle" src="${t.user.photo}" alt="user avatar">
                     ${t.user.name}
                   </td>
@@ -1093,12 +1159,12 @@
                 path,
                 function (result) {
                   if (result.result === 'error')
-                    window.open(document.referrer + path, '_blank').focus();
+                    window.open(document.referrer + path.substring(1), '_blank').focus();
                 }
               );
             });
           },
-          createPagination: function () {
+          createPagination: function (parent) {
             const self = this, step_size = this.step_size;
             $('.' + this.paginationWrapperClass).empty();
 
@@ -1126,7 +1192,7 @@
               const local_page = parseInt($(this).attr('page'));
               if (local_page >= 0 && local_page <= self.pages_data.length - 1) {
                 self.page = local_page;
-                return self.changePage();
+                return self.changePage(parent);
               }
             });
             $('.' + this.gotoNextPageClass).click(function () {
@@ -1137,21 +1203,47 @@
             $('.' + this.gotoPrevPageClass).click(function () {
               if (self.page < 1) self.page = 0;
               else self.page--;
-              return self.changePage();
+              return self.changePage(parent);
             });
             $('.' + this.gotoLastPageClass).click(function () {
               self.page = self.pages_data.length - 1;
-              return self.changePage();
+              return self.changePage(parent);
             });
             $('.' + this.gotoFirstPageClass).click(function () {
               self.page = 0;
-              return self.changePage();
+              return self.changePage(parent);
             });
           },
-          changePage: function () {
-            this.createTable();
-            this.createPagination();
+          changePage: function (parent) {
+            this.createTable(parent);
+            this.createPagination(parent);
           },
+          sortTable: function (parent, reverse, target, type) {
+            if (this.data.length < 1) return;
+            if (!this.data[0].hasOwnProperty(target)) return;
+            const __sort = function (__reverse, __target, __type) {
+              return function (a, b) {
+                if (target === 'user')
+                  if (type === 'string') return reverse ?
+                    b.user.name.toString().localeCompare(a.user.name.toString()) :
+                    a.user.name.toString().localeCompare(b.user.name.toString());
+                  else return reverse ? b.user.id - a.user.id : a.user.id - b.user.id;
+                if (type === 'integer') return reverse ? b[target] - a[target] : a[target] - b[target];
+                if (type === 'string') return reverse ?
+                  b[target].toString().localeCompare(a[target].toString()) :
+                  a[target].toString().localeCompare(b[target].toString());
+                if (type === 'date') return reverse ? new Date(b[target]) - new Date(a[target]) : new Date(a[target]) - new Date(b[target]);
+                throw 'Unknow type of sort!';
+              }
+            }
+            this.page = 0;
+            this.data.sort(__sort(reverse, target, type));
+            let local_table = JSON.parse(JSON.stringify(this.data)), result = [], length = this.page_size;
+            while (local_table.length) result.push(local_table.splice(0, length));
+            this.pages_data = result;
+            if (result.length > 1) this.createPagination(parent);
+            this.createTable(parent);
+          }
         }
       }
 
