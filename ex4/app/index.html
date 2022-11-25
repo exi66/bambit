@@ -22,8 +22,30 @@
       min-height: 3.25rem;
     }
 
+    .select2-selection__choice__remove {
+      float: right;
+      margin-right: 0.25rem !important;
+      margin-left: 0.25rem !important;
+    }
+
+    .remove_from_filter {
+      cursor: pointer;
+    }
+
     .open-path {
       cursor: pointer;
+    }
+
+    .page-link:disabled {
+      background-color: rgba(239, 239, 239, 0.3);
+      color: rgba(46, 46, 46, 0.3);
+      border-color: rgba(195, 195, 195, 0.3);
+    }
+
+    .page-link:disabled:hover {
+      background-color: rgba(239, 239, 239, 0.3);
+      color: rgba(46, 46, 46, 0.3);
+      border-color: rgba(195, 195, 195, 0.3);
     }
 
     .goto-page {
@@ -81,7 +103,7 @@
       display: block;
       margin: 0 auto 50px auto;
       width: 247px;
-      height: 246px;
+      height: 280px;
       background: #fff;
     }
 
@@ -204,11 +226,13 @@
 
 <body>
   <main id="app" class="container-fluid">
-    <h1>Удаление записей различных сущностей</h1>
-    <div class="row row-cols-2">
-      <div class="col row">
+    <div class="row d-flex justify-content-center">
+      <div class="col-5 row">
+        <div class="col-12">
+          <h1>Удаление записей</h1>
+        </div>
         <div class="col-12 my-3">
-          <h2>Сущность</h2>
+          <h2>Тип</h2>
           <select id="select-entity" class="form-select form-select-lg">
             <option value="lead" selected>Лиды</option>
             <option value="task">Задачи</option>
@@ -217,24 +241,22 @@
         </div>
         <div class="col-12 my-3">
           <h2>Фильтр</h2>
-          <div id="filter" class="form-select form-select-lg form-select-filter" data-bs-toggle="collapse"
-            data-bs-target="#filter-menu" aria-expanded="false" aria-controls="filter-menu">
-            <div class="row">
-              <div class="col-auto filter-card d-inline-flex p-0 my-1" data-target="#id-picker"></div>
-              <div class="col-auto filter-card d-inline-flex p-0 my-1" data-target="#user-picker"></div>
-              <div class="col-auto filter-card d-inline-flex p-0 my-1" data-target="#date-picker"></div>
-              <div class="col-auto filter-card d-inline-flex p-0 my-1" data-target="#name-picker"></div>
-              <div class="col-auto filter-card d-inline-flex p-0 my-1" data-target="#status-picker"></div>
+          <div id="filter" class="form-select form-select-lg form-select-filter" data-bs-toggle="dropdown"
+            data-bs-auto-close="outside" aria-expanded="false">
+            <div class="row" id="filter-cards-wrapper">
+
             </div>
           </div>
-          <div class="collapse" id="filter-menu">
-            <form class="p-4 w-100" id="filter-form" data-target="#filter"></form>
+          <div class="position-relative m-0 p-0">
+            <div class="dropdown-menu w-100" style="z-index: 50;" id="filter-menu" aria-labelledby="filter">
+              <form class="p-4 w-100" id="filter-form" data-target="#filter"></form>
+            </div>
           </div>
         </div>
         <div class="col-12 my-3">
           <div class="card">
             <div class="card-body">
-              <h3 class="card-title">Сущность: <span class="entity-type">Лид</span></h3>
+              <h3 class="card-title">Тип: <span class="entity-type">Лид</span></h3>
               <div class="row my-1">
                 <div class="col my-auto">
                   <p class="card-text">Найдено сущностей: <span class="entity-count">0</span></p>
@@ -297,18 +319,13 @@
               </div>
             </div>
           </div>
-          <div class="modal-footer m-0">
-            <div class="">
-              Осталось: ~<span class="approximate-timer">0</span>
-            </div>
-            <div class="ms-auto">
-              <button type="button" class="btn btn-danger" id="cancel-req" disabled>Отменить</button>
-            </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" id="cancel-req" disabled>Отменить</button>
           </div>
         </div>
       </div>
     </div>
-    <div class="offcanvas offcanvas-end w-100 border-0" tabindex="-1" id="filter-offcanvas"
+    <div class="offcanvas offcanvas-end w-75 border-0 my-3" tabindex="-1" id="filter-offcanvas"
       aria-labelledby="slider-title">
       <div class="offcanvas-header justify-content-start">
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -316,7 +333,7 @@
       </div>
       <div class="offcanvas-body">
         <p class="fw-bold">
-          Сущность: <span class="entity-type">Лид</span><br>
+          Тип: <span class="entity-type">Лид</span><br>
           Найдено: <span class="entity-count">0</span>
         </p>
         <div class="pagination-wrapper"></div>
@@ -324,10 +341,14 @@
           <table id="filter-table" class="table table-bordered table-hover align-middle">
             <thead>
               <tr class="sort-wrapper">
-                <th scope="col" class="th-sort-table active reverse" data-target="id" data-type="integer">ID</th>
-                <th scope="col" class="th-sort-table" data-target="title" data-type="string">Название</th>
-                <th scope="col" class="th-sort-table" data-target="user" data-type="string">Ответственный</th>
-                <th scope="col" class="th-sort-table" data-target="created" data-type="date">Дата создания</th>
+                <th scope="col" class="th-sort-table active reverse" data-target="id" data-type="integer"
+                  style="width: 10%;">ID</th>
+                <th scope="col" class="th-sort-table" data-target="title" data-type="string" style="width: 30%;">
+                  Название</th>
+                <th scope="col" class="th-sort-table" data-target="user" data-type="string" style="width: 30%;">
+                  Ответственный</th>
+                <th scope="col" class="th-sort-table" data-target="created" data-type="date" style="width: 20%;">Дата
+                  создания</th>
                 <th scope="col"></th>
               </tr>
             </thead>
@@ -390,12 +411,12 @@
         });
         if (res.error()) throw 'Request error: ' + res.error();
         let local_entityList = __wrapper ? res.data()[__wrapper] : res.data();
-        if (__callback(local_entityList.length).cancel) throw 'Cancel';
+        if (__callback(res, local_entityList.length).cancel) throw 'Cancel';
         while (res.more()) {
           res = await this.client.next(res);
           if (res.error()) throw 'Request error: ' + res.error();
           local_entityList = local_entityList.concat(__wrapper ? res.data()[__wrapper] : res.data());
-          if (__callback(local_entityList.length).cancel) throw 'Cancel';
+          if (__callback(res, local_entityList.length).cancel) throw 'Cancel';
         }
         return this.entityList = local_entityList;
       }
@@ -424,9 +445,11 @@
             params: { [this.methods.delete.param]: e.id }
           })));
         }
+        let count = 0;
         for (let i = 0; i < cmds.length; i++) {
           let res = await this.client.callBatch(cmds[i]);
-          if (__callback(res, i).cancel) throw 'Cancel';
+          count += res.length;
+          if (__callback(res, count).cancel) throw 'Cancel';
         }
       }
       async delete(settings) {
@@ -539,6 +562,7 @@
     }
 
     const FIELDS = {
+      users: [],
       form: '#filter-form',
       callback: function () { },
       createTaskStatusPicker: function () {
@@ -558,13 +582,7 @@
         });
       },
       createUserPicker: async function () {
-        let res = await BX24Client.call('user.get', {});
-        let users_list = res.data();
-        while (res.more()) {
-          res = await BX24Client.next(res);
-          users_list = users_list.concat(res.data());
-        }
-        let options = users_list.map(e => ({ value: e.ID, label: e.NAME && e.LAST_NAME ? e.NAME + ' ' + e.LAST_NAME : 'Нет имени (id: ' + e.ID + ')' }));
+        let options = this.users.map(e => ({ value: e.id, label: e.name }));
         this.createSelect({
           form: this.form,
           id: 'user-picker',
@@ -601,11 +619,15 @@
         $(this.form).append(`<div id="${id}" class="mb-3 picker"></div>`);
 
         $(parent).append(`<label class="form-label w-100">Идентификатор:
-        <div class="d-flex">
-          <label class="form-label text-start my-auto mx-2" for="min_id">От:</label>
-          <input type="number" name="min_id" class="filter-input form-control" min="0">
-          <label class="form-label text-start my-auto mx-2" for="max_id">До:</label>
-          <input type="number" name="max_id" class="filter-input form-control" min="0">
+        <div class="row">
+          <div class="col-6">
+            <label class="form-label mx-2" for="min_id">От:</label>
+            <input type="number" name="min_id" class="filter-input form-control" min="0">
+          </div>
+          <div class="col-6">
+            <label class="form-label mx-2" for="max_id">До:</label>
+            <input type="number" name="max_id" class="filter-input form-control" min="0">
+          </div>
         </div>
       </label>`);
         let min_id = $('input[name="min_id"]');
@@ -634,13 +656,17 @@
         $(this.form).append(`<div id="${id}" class="mb-3 picker"></div>`);
 
         $(parent).append(`<label class="form-label w-100">Дата создания:
-        <div class="d-flex">
-          <label class="form-label text-start my-auto mx-2" for="start_date">Начальная: </label>
-          <input type="text" name="start_date" class="filter-input form-control" readonly>
-          <label class="form-label text-start my-auto mx-2" for="end_date">Конечная: </label>
-          <input type="text" name="end_date" class="filter-input form-control" readonly>
-        </div>
-      </label>`);
+          <div class="row">
+            <div class="col-6">
+              <label class="form-label text-start mx-2" for="start_date">Начальная: </label>
+              <input type="text" name="start_date" class="filter-input form-control" readonly>
+            </div>
+            <div class="col-6">
+              <label class="form-label text-start mx-2" for="end_date">Конечная: </label>
+              <input type="text" name="end_date" class="filter-input form-control" readonly>
+            </div>
+          </div>
+        </label>`);
         let startDatePicker = new AirDatepicker(parent + ' input[name="start_date"]', {
           minDate: new Date(1),
           buttons: ['clear'],
@@ -680,6 +706,12 @@
               label: 'Конечная:',
             });
           }
+        });
+        $(parent).find('input[name="start_date"]').change(function (e) {
+          if ($(this).val() == 0) startDatePicker.clear({ silent: false });
+        });
+        $(parent).find('input[name="end_date"]').change(function (e) {
+          if ($(this).val() == 0) endDatePicker.clear({ silent: false });
         });
         return { start: startDatePicker, end: endDatePicker };
       },
@@ -750,6 +782,7 @@
       {
         name: 'lead',
         label: 'Лид',
+        labels: ['лид', 'лида', 'лидов'],
         path: '/crm/lead/details/',
         entity: {},
         new: function () {
@@ -782,6 +815,7 @@
       {
         name: 'company',
         label: 'Компания',
+        labels: ['компания', 'компании', 'компаний'],
         path: '/crm/company/details/',
         entity: {},
         new: function () {
@@ -812,6 +846,7 @@
       {
         name: 'task',
         label: 'Задача',
+        labels: ['задача', 'задачи', 'задач'],
         path: '/company/personal/user/0/tasks/task/view/', //?я не знаю как открыть по другому в слайдере
         entity: {},
         new: function () {
@@ -877,6 +912,9 @@
         query: {},
         count: 0,
         cancel: false,
+        users: [],
+
+        height: 0,
 
         html: '#app',
 
@@ -890,6 +928,7 @@
         tableOffcanvas: '#filter-offcanvas',
         confirmModal: '#confirm',
         cancelButton: '#cancel-req',
+        filterCardsWrapper: '#filter-cards-wrapper',
 
         filterCardsClass: 'filter-card',
 
@@ -900,22 +939,73 @@
           this.ac = new AbortController();
           FIELDS.callback = function (data) { //тут надо тоже вынести классы
             if (!data) return;
-            const parent = $(self.filter).find(`.${self.filterCardsClass}[data-target="${data.parent}"]`);
-            parent.find('#' + data.name + '-wrapper').remove();
+            $(self.filterCardsWrapper).find(`.${self.filterCardsClass}[data-target="${data.parent}"][data-name="${data.name}"]`).remove();
+            $(self.filterCardsWrapper).append(`<div class="col-auto ${self.filterCardsClass} d-inline-flex p-0 my-1" data-target="${data.parent}" data-name="${data.name}"></div>`);
+            const parent = $(self.filterCardsWrapper).find(`.${self.filterCardsClass}[data-target="${data.parent}"][data-name="${data.name}"]`);
             if (data.value) {
               parent.append(`<div id="${data.name}-wrapper" class="input-wrapper px-1 mx-1 my-auto badge text-bg-primary">
               <span class="label-wrapper">${data.label || 'Не задан'}</span>
               <span class="value-wrapper">${data.value}</span>
+              <span class="remove_from_filter mx-1">×</span>
             </div>`);
             }
+            $('.' + self.filterCardsClass).click(function (e) {
+              e.stopPropagation();
+              self.bs.dropDownMenu.toggle();
+            });
+            $('.remove_from_filter').click(function (e) {
+              e.stopPropagation();
+              self.bs.dropDownMenu.toggle();
+              let parent = $(this).parent().parent(),
+                target = parent.attr('data-target'),
+                name = parent.attr('data-name');
+              $(target).find('input[name="' + name + '"]').val('').change();
+              $(target).find('select[name="' + name + '[]"]').val('').change();
+            });
             self.updateData();
           }
           FIELDS.form = this.form;
 
+
+          {
+            let res = await BX24Client.call('user.get', {});
+            let users_list = res.data();
+            while (res.more()) {
+              res = await BX24Client.next(res);
+              users_list = users_list.concat(res.data());
+            }
+            this.users = users_list.map(e => ({
+              name: e.NAME && e.LAST_NAME ? e.NAME + ' ' + e.LAST_NAME : 'Нет имени (id: ' + e.ID + ')',
+              id: e.ID,
+              photo: e.PERSONAL_PHOTO || './img/unknow-user.svg',
+            }));
+          }
+          FIELDS.users = this.users;
+
+          {
+            let h = $(this.html).height();
+            this.height = h + 500;
+            $(this.html).height(this.height);
+            this.fitWindow();
+          }
+
+          $(this.tableOffcanvas).on('shown.bs.offcanvas', function (e) {
+            const h = $(self.filterTable).height();
+            if (self.height < h + 400) {
+              BX24.resizeWindow(h + 400, h + 400, (result) => { BX24.fitWindow(); });
+            }
+          });
+
+          $(this.tableOffcanvas).on('hidden.bs.offcanvas', function (e) {
+            $(self.html).height(self.height);
+            self.fitWindow();
+          });
+
           $(this.cancelButton).click(function () {
             $(this).prop('disabled', true);
             self.loader.update({
-              title: 'Отмена...',
+              title: 'Отмена',
+              progress_title: 'Прерывание операций...'
             });
             self.cancel = true;
           });
@@ -942,24 +1032,28 @@
             if (self.table.expired) {
 
               self.loader.update({
-                title: 'Получение сущностей',
+                title: 'Получение ' + self.declOfNum(5, self.entity.labels),
                 progress: 0,
-                progress_title: 'Сущности: 0%'
+                progress_title: '0 / ' + self.count
               });
               self.loader.show(self);
+
               $(self.cancelButton).prop('disabled', false);
 
               let __filter = self.entity.serialize(self.query), __client = self.entity.new(), table_res = [];
+
               try {
                 table_res = await __client.get({
                   filter: __filter,
                   select: ['ID'],
-                  callback: function (c) {
-                    let status = Math.trunc((c / self.count) * 100);
+                  callback: function (res, c) {
                     self.loader.update({
-                      progress: status,
-                      progress_title: 'Сущности: ' + status + '%',
-                      request_count: Math.trunc((self.count - c) / 50)
+                      progress: Math.trunc((c / self.count) * 100),
+                      progress_title: c + ' / ' + self.count,
+                      approximate: {
+                        time: res.answer.time.duration,
+                        count: Math.trunc((self.count - c) / 50)
+                      },
                     });
                     return { cancel: self.cancel };
                   }
@@ -976,19 +1070,21 @@
               let serialize_table = self.entity.table(table_res);
 
               self.loader.update({
-                title: 'Удаление сущностей',
+                title: 'Удаление ' + self.declOfNum(5, self.entity.labels),
                 progress: 0,
-                progress_title: 'Сущности: 0%'
+                progress_title: '0 / ' + self.count
               });
               try {
                 await __client.deleteAll({
                   entityList: serialize_table,
                   callback: function (res, c) {
-                    let status = Math.min(Math.trunc(((c + 1) * 50 / self.count) * 100), 100);
                     self.loader.update({
-                      progress: status,
-                      progress_title: 'Сущности: ' + status + '%',
-                      request_count: Math.max(Math.trunc((self.count / 50 - c)), 0)
+                      progress: Math.trunc((c / self.count) * 100),
+                      progress_title: c + ' / ' + self.count,
+                      approximate: {
+                        time: res.answer.time.duration,
+                        count: Math.trunc((self.count - c) / 50)
+                      },
                     });
                     return { cancel: self.cancel };
                     //console.log(res);
@@ -1005,9 +1101,9 @@
             } else {
 
               self.loader.update({
-                title: 'Удаление сущностей',
+                title: 'Удаление ' + self.declOfNum(5, self.entity.labels),
                 progress: 0,
-                progress_title: 'Сущности: 0%'
+                progress_title: '0 / ' + self.count
               });
               self.loader.show(self);
               $(self.cancelButton).prop('disabled', false);
@@ -1017,11 +1113,13 @@
                 await __client.deleteAll({
                   entityList: self.table.data,
                   callback: function (res, c) {
-                    let status = Math.min(Math.trunc(((c + 1) * 50 / self.count) * 100), 100);
                     self.loader.update({
-                      progress: status,
-                      progress_title: 'Сущности: ' + status + '%',
-                      request_count: Math.max(Math.trunc((self.count / 50 - c)), 0)
+                      progress: Math.trunc((c / self.count) * 100),
+                      progress_title: c + ' / ' + self.count,
+                      approximate: {
+                        time: res.answer.time.duration,
+                        count: Math.trunc((self.count - c) / 50)
+                      },
                     });
                     return { cancel: self.cancel };
                     //console.log(res);
@@ -1052,7 +1150,6 @@
 
             $(self.form).empty();
             $('.' + self.filterCardsClass).empty();
-            $(self.filterMenu).collapse('hide');
 
             self.entity = ENTITIES.find(e => e.name === type);
             if (!self.entity) throw 'Unknow type of entity!';
@@ -1061,72 +1158,40 @@
             self.updateData();
           });
 
-          $(this.filterMenu).on('shown.bs.collapse hidden.bs.collapse', function (e) {
-            self.fitWindow();
-          });
-
           $(this.showTable).click(async function () {
             if (!self.table.expired) return self.table.show(self);
 
             $(this).prop('disabled', true);
             self.cancel = false;
 
+            let serialize_users = self.users;
+
             self.loader.update({
-              title: 'Подготовка',
+              title: 'Получение ' + self.declOfNum(5, self.entity.labels),
               progress: 0,
-              progress_title: 'Пользователи: 0%'
-            });
-            self.loader.show(self);
-
-            let res = await BX24Client.call('user.get', {});
-            let users_list = res.data(), total = res.total(), status = Math.trunc((users_list.length / total) * 100);
-
-            self.loader.update({
-              progress: status,
-              progress_title: 'Пользователи: ' + status + '%',
-              request_count: Math.trunc((total - users_list.length) / 50)
-            });
-
-            while (res.more()) {
-              res = await BX24Client.next(res);
-              users_list = users_list.concat(res.data()), status = Math.trunc((users_list.length / total) * 100);
-
-              self.loader.update({
-                progress: status,
-                progress_title: 'Пользователи: ' + status + '%',
-                request_count: Math.trunc((total - users_list.length) / 50)
-              });
-            }
-
-            let serialize_users = users_list.map(e => ({
-              name: e.NAME && e.LAST_NAME ? e.NAME + ' ' + e.LAST_NAME : 'Нет имени (id: ' + e.ID + ')',
-              id: e.ID,
-              photo: e.PERSONAL_PHOTO || './img/unknow-user.svg',
-            }));
-
-            self.loader.update({
-              title: 'Получение сущностей',
-              progress: 0,
-              progress_title: 'Сущности: 0%',
-              request_count: Math.trunc(self.count / 50)
+              progress_title: '0 / ' + self.count,
             });
             $(self.cancelButton).prop('disabled', false);
+            self.loader.show(self);
 
             let __filter = self.entity.serialize(self.query), __client = self.entity.new(), table_res = [];
             try {
               table_res = await __client.get({
                 filter: __filter,
-                callback: function (c) {
-                  let status = Math.trunc((c / self.count) * 100);
+                callback: function (res, c) {
                   self.loader.update({
-                    progress: status,
-                    progress_title: 'Сущности: ' + status + '%',
-                    request_count: Math.trunc((self.count - c) / 50)
+                    progress: Math.trunc((c / self.count) * 100),
+                    progress_title: c + ' / ' + self.count,
+                    approximate: {
+                      time: res.answer.time.duration,
+                      count: Math.trunc((self.count - c) / 50)
+                    },
                   });
                   return { cancel: self.cancel };
                 }
               });
             } catch (e) {
+              console.log(e);
               await timeout(1000);
               self.loader.hide(self);
               $(this).prop('disabled', false);
@@ -1161,6 +1226,10 @@
         fitWindow: function () {
           BX24.resizeWindow($(this.html).width(), $(this.html).height(), (result) => { BX24.fitWindow(); });
         },
+        declOfNum: function (number, titles) {
+          cases = [2, 0, 1, 1, 1, 2];
+          return titles[(number % 100 > 4 && number % 100 < 20) ? 2 : cases[(number % 10 < 5) ? number % 10 : 5]];
+        },
         updateData: async function () { //тут надо тоже вынести классы
           $('.filter-button').prop('disabled', true);
 
@@ -1173,8 +1242,6 @@
           $('.entity-type').text(this.entity.label);
           $('.entity-count').text(this.count);
           $('.filter-button').prop('disabled', this.count < 1);
-
-          this.fitWindow();
         },
         dialog: async function (text) { //тут надо тоже вынести классы
           if (!this.bs.confirmModal) this.bs.init();
@@ -1206,19 +1273,19 @@
           titleClass: 'modal-title',
           progressbarClass: 'progressbar-bar',
           progressbarTitleClass: 'progressbar-status-percent',
-          approximateClass: 'approximate-timer',
+          approximateClass: 'progressbar-text-after',
 
           update: function (settings) {
             if (settings.title) $(this.html).find('.' + this.titleClass).text(settings.title);
             if (settings.progress != null) $(this.html).find('.' + this.progressbarClass).css('width', settings.progress + '%')
             if (settings.progress_title) $(this.html).find('.' + this.progressbarTitleClass).text(settings.progress_title);
-            if (settings.request_count != null) this.updateApproximate(settings.request_count);
+            if (settings.approximate) this.updateApproximate(settings.approximate);
           },
-          updateApproximate: function (c) {
-            const timeot = 500, approximate = c * timeot;
-            let minutes = Math.floor(approximate / 60000);
-            let seconds = ((approximate % 60000) / 1000).toFixed(0);
-            $(this.html).find('.' + this.approximateClass).text(`${Math.trunc(minutes)} мин. ${Math.trunc(seconds)} сек.`);
+          updateApproximate: function (settings) {
+            const approximate = Math.max(settings.time, 0.5) * settings.count;
+            let minutes = Math.floor(approximate / 60);
+            let seconds = (approximate % 60).toFixed(0);
+            $(this.html).find('.' + this.approximateClass).text(`Осталось: ~ ${Math.trunc(minutes)} мин. ${Math.trunc(seconds)} сек.`);
           },
           show: function (parent) {
             parent.bs.loaderModal.show();
@@ -1231,7 +1298,9 @@
           tableOffcanvas: {},
           confirmModal: {},
           loaderModal: {},
+          dropDownMenu: {},
           init: function () {
+            this.dropDownMenu = new bootstrap.Dropdown(document.getElementById('filter'));
             this.tableOffcanvas = new bootstrap.Offcanvas(document.getElementById('filter-offcanvas'));
             this.confirmModal = new bootstrap.Modal(document.getElementById('confirm'));
             this.loaderModal = new bootstrap.Modal(document.getElementById('loader'));
@@ -1282,12 +1351,12 @@
               $(this.html).find('tbody').append(`
                 <tr>
                   <th scope="row">${t.id}</th>
-                  <td class="${this.openPathClass} link-primary" data-path="${t.path + t.id}/">${t.title}</td>
-                  <td class="${t.user.id !== -1 ? this.openPathClass : ''} link-primary" ${t.user.id !== -1 ? `data-path="/company/personal/user/${t.user.id}/"` : ''}>
+                  <td class="${this.openPathClass} link-primary text-truncate" data-path="${t.path + t.id}/">${t.title}</td>
+                  <td class="${t.user.id !== -1 ? this.openPathClass + ' link-primary ' : ''} text-truncate" ${t.user.id !== -1 ? `data-path="/company/personal/user/${t.user.id}/"` : ''}>
                     <img class="${this.userAvatarClass} rounded-circle" src="${t.user.photo}" alt="user avatar">
                     ${t.user.name}
                   </td>
-                  <td>${new Date(t.created).toLocaleDateString('ru-RU')}</td>
+                  <td class="text-truncate">${new Date(t.created).toLocaleDateString('ru-RU')}</td>
                   <th style="width: 7rem" class="text-center ${this.buttonsWrapperClass}">
                     <button type="button" class="btn btn-danger btn-sm ${this.deleteButtonClass}" data-id="${t.id}">Удалить</button>
                   </th>
