@@ -268,7 +268,7 @@
     </div>
     <div class="modal fade" id="loader" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
       aria-labelledby="loader-title" aria-hidden="true">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
             <h3 class="modal-title" id="loader-title">Загрузка...</h3>
@@ -302,7 +302,7 @@
               Осталось: ~<span class="approximate-timer">0</span>
             </div>
             <div class="ms-auto">
-              <button type="button" class="btn btn-danger" data-bs-dismiss="modal" disabled>Отменить</button>
+              <button type="button" class="btn btn-danger" id="cancel-req" disabled>Отменить</button>
             </div>
           </div>
         </div>
@@ -390,12 +390,12 @@
         });
         if (res.error()) throw 'Request error: ' + res.error();
         let local_entityList = __wrapper ? res.data()[__wrapper] : res.data();
-        __callback(local_entityList.length);
+        if (__callback(local_entityList.length).cancel) throw 'Cancel';
         while (res.more()) {
           res = await this.client.next(res);
           if (res.error()) throw 'Request error: ' + res.error();
           local_entityList = local_entityList.concat(__wrapper ? res.data()[__wrapper] : res.data());
-          __callback(local_entityList.length);
+          if (__callback(local_entityList.length).cancel) throw 'Cancel';
         }
         return this.entityList = local_entityList;
       }
@@ -410,19 +410,23 @@
         if (res.error()) throw 'Request error: ' + res.error();
         return res.total();
       }
-      async deleteAll() {
-        if (!this.entityList) return;
-        let local_entityList = JSON.parse(JSON.stringify(!this.entityList)), result = [], length = 50;
+      async deleteAll(settings) {
+        if (!settings.entityList) return;
+        let local_entityList = JSON.parse(JSON.stringify(settings.entityList)),
+          result = [],
+          length = 50,
+          __callback = settings.callback || function () { };
         while (local_entityList.length) result.push(local_entityList.splice(0, length));
         let cmds = [];
         for (let page of result) {
           cmds.push(page.map(e => ({
             method: this.methods.delete.method,
-            params: { [this.methods.delete.param]: e.ID }
+            params: { [this.methods.delete.param]: e.id }
           })));
         }
-        for (let page of cmds) {
-          await this.client.callBatch(page);
+        for (let i = 0; i < cmds.length; i++) {
+          let res = await this.client.callBatch(cmds[i]);
+          if (__callback(res, i).cancel) throw 'Cancel';
         }
       }
       async delete(settings) {
@@ -468,7 +472,7 @@
       serializeLead: function (query) {
         let ___filter = {};
         if (query['users[]']) ___filter.ASSIGNED_BY_ID = query['users[]'];
-        if (query.title) ___filter.TITLE = query.title;
+        if (query.title) ___filter['%TITLE'] = query.title;
         if (query.min_id) ___filter['>ID'] = parseInt(query.min_id);
         if (query.max_id) ___filter['<ID'] = parseInt(query.max_id);
         if (query.start_date) ___filter['>DATE_CREATE'] = this.date2str(query.start_date) + 'T00:00:00';
@@ -479,7 +483,7 @@
       serializeCompany: function (query) {
         let ___filter = {};
         if (query['users[]']) ___filter.ASSIGNED_BY_ID = query['users[]'];
-        if (query.title) ___filter.TITLE = query.title;
+        if (query.title) ___filter['%TITLE'] = query.title;
         if (query.min_id) ___filter['>ID'] = parseInt(query.min_id);
         if (query.max_id) ___filter['<ID'] = parseInt(query.max_id);
         if (query.start_date) ___filter['>DATE_CREATE'] = this.date2str(query.start_date) + 'T00:00:00';
@@ -489,7 +493,7 @@
       serializeTask: function (query) {
         let ___filter = {};
         if (query['users[]']) ___filter.RESPONSIBLE_ID = query['users[]'];
-        if (query.title) ___filter.TITLE = query.title;
+        if (query.title) ___filter['%TITLE'] = query.title;
         if (query.min_id) ___filter['>ID'] = parseInt(query.min_id);
         if (query.max_id) ___filter['<ID'] = parseInt(query.max_id);
         if (query.start_date) ___filter['>CREATED_DATE'] = this.date2str(query.start_date) + 'T00:00:00';
@@ -511,10 +515,26 @@
     //делает обратное
     const TABLE = {
       serializeLead: function (array) {
-        return array.map(e => ({ id: e.ID, title: e.TITLE, user: e.ASSIGNED_BY_ID, created: e.DATE_CREATE }));
+        return array.map(function (e) {
+          if (!e.ID) return;
+          let elem = {};
+          elem.id = e.ID;
+          if (e.TITLE) elem.title = e.TITLE;
+          if (e.ASSIGNED_BY_ID) elem.user = e.ASSIGNED_BY_ID;
+          if (e.DATE_CREATE) elem.created = e.DATE_CREATE;
+          return elem;
+        });
       },
       serializeTask: function (array) {
-        return array.map(e => ({ id: e.id, title: e.title, user: e.responsibleId, created: e.createdDate }));
+        return array.map(function (e) { //e => ({ id: e.id, title: e.title, user: e.responsibleId, created: e.createdDate }))
+          if (!e.id) return;
+          let elem = {};
+          elem.id = e.id;
+          if (e.title) elem.title = e.title;
+          if (e.responsibleId) elem.user = e.responsibleId;
+          if (e.createdDate) elem.created = e.createdDate;
+          return elem;
+        });
       },
     }
 
@@ -733,6 +753,7 @@
         path: '/crm/lead/details/',
         entity: {},
         new: function () {
+          if (this.entity instanceof Entities) return this.entity;
           return this.entity = new Entities({
             list: {
               select: ['ID', 'DATE_CREATE', 'ASSIGNED_BY_ID', 'TITLE'],
@@ -855,6 +876,7 @@
         entity: {},
         query: {},
         count: 0,
+        cancel: false,
 
         html: '#app',
 
@@ -867,6 +889,7 @@
         filterTable: '#filter-table',
         tableOffcanvas: '#filter-offcanvas',
         confirmModal: '#confirm',
+        cancelButton: '#cancel-req',
 
         filterCardsClass: 'filter-card',
 
@@ -874,6 +897,7 @@
           const self = this;
 
           this.bs.init();
+          this.ac = new AbortController();
           FIELDS.callback = function (data) { //тут надо тоже вынести классы
             if (!data) return;
             const parent = $(self.filter).find(`.${self.filterCardsClass}[data-target="${data.parent}"]`);
@@ -888,6 +912,14 @@
           }
           FIELDS.form = this.form;
 
+          $(this.cancelButton).click(function () {
+            $(this).prop('disabled', true);
+            self.loader.update({
+              title: 'Отмена...',
+            });
+            self.cancel = true;
+          });
+
           $('.' + this.table.sortButtonClass).click(function () {
             const reverse = $(this).hasClass('reverse'),
               target = $(this).attr('data-target'),
@@ -899,6 +931,120 @@
             else $(this).addClass('forward');
 
             self.table.sortTable(self, reverse, target, type);
+          });
+
+          $(this.deleteAll).click(async function () {
+            if (!self.query || !self.count) return;
+            const flag = await self.dialog(`Вы действительно хотите удалить ${self.count} сущ. типа ${self.entity.label}?`);
+            if (!flag) return;
+            $(this).prop('disabled', true);
+            self.cancel = false;
+            if (self.table.expired) {
+
+              self.loader.update({
+                title: 'Получение сущностей',
+                progress: 0,
+                progress_title: 'Сущности: 0%'
+              });
+              self.loader.show(self);
+              $(self.cancelButton).prop('disabled', false);
+
+              let __filter = self.entity.serialize(self.query), __client = self.entity.new(), table_res = [];
+              try {
+                table_res = await __client.get({
+                  filter: __filter,
+                  select: ['ID'],
+                  callback: function (c) {
+                    let status = Math.trunc((c / self.count) * 100);
+                    self.loader.update({
+                      progress: status,
+                      progress_title: 'Сущности: ' + status + '%',
+                      request_count: Math.trunc((self.count - c) / 50)
+                    });
+                    return { cancel: self.cancel };
+                  }
+                });
+              } catch (e) {
+                await timeout(1000);
+                self.loader.hide(self);
+                $(this).prop('disabled', false);
+                $(self.cancelButton).prop('disabled', false);
+                await self.updateData();
+                return;
+              }
+
+              let serialize_table = self.entity.table(table_res);
+
+              self.loader.update({
+                title: 'Удаление сущностей',
+                progress: 0,
+                progress_title: 'Сущности: 0%'
+              });
+              try {
+                await __client.deleteAll({
+                  entityList: serialize_table,
+                  callback: function (res, c) {
+                    let status = Math.min(Math.trunc(((c + 1) * 50 / self.count) * 100), 100);
+                    self.loader.update({
+                      progress: status,
+                      progress_title: 'Сущности: ' + status + '%',
+                      request_count: Math.max(Math.trunc((self.count / 50 - c)), 0)
+                    });
+                    return { cancel: self.cancel };
+                    //console.log(res);
+                  }
+                });
+              } catch (e) {
+                await timeout(1000);
+                self.loader.hide(self);
+                $(this).prop('disabled', false);
+                $(self.cancelButton).prop('disabled', false);
+                await self.updateData();
+                return;
+              }
+            } else {
+
+              self.loader.update({
+                title: 'Удаление сущностей',
+                progress: 0,
+                progress_title: 'Сущности: 0%'
+              });
+              self.loader.show(self);
+              $(self.cancelButton).prop('disabled', false);
+
+              let __client = self.entity.new();
+              try {
+                await __client.deleteAll({
+                  entityList: self.table.data,
+                  callback: function (res, c) {
+                    let status = Math.min(Math.trunc(((c + 1) * 50 / self.count) * 100), 100);
+                    self.loader.update({
+                      progress: status,
+                      progress_title: 'Сущности: ' + status + '%',
+                      request_count: Math.max(Math.trunc((self.count / 50 - c)), 0)
+                    });
+                    return { cancel: self.cancel };
+                    //console.log(res);
+                  }
+                });
+              }
+              catch (e) {
+                await timeout(1000);
+                self.loader.hide(self);
+                $(this).prop('disabled', false);
+                $(self.cancelButton).prop('disabled', false);
+                await self.updateData();
+                return;
+              }
+            }
+
+            await timeout(1000);
+            self.loader.hide(self);
+            await self.updateData();
+            //костыль на слип для бутстраповского модального окна
+            function timeout(ms) {
+              return new Promise(resolve => setTimeout(resolve, ms));
+            }
           });
 
           $(this.selectType).change(function () {
@@ -923,6 +1069,7 @@
             if (!self.table.expired) return self.table.show(self);
 
             $(this).prop('disabled', true);
+            self.cancel = false;
 
             self.loader.update({
               title: 'Подготовка',
@@ -963,20 +1110,30 @@
               progress_title: 'Сущности: 0%',
               request_count: Math.trunc(self.count / 50)
             });
+            $(self.cancelButton).prop('disabled', false);
 
-            let __filter = self.entity.serialize(self.query), __client = self.entity.new();
-            let table_res = await __client.get({
-              filter: __filter,
-              callback: function (c) {
-                let status = Math.trunc((c / self.count) * 100);
-                self.loader.update({
-                  progress: status,
-                  progress_title: 'Сущности: ' + status + '%',
-                  request_count: Math.trunc((self.count - c) / 50)
-                });
-              }
-            });
-
+            let __filter = self.entity.serialize(self.query), __client = self.entity.new(), table_res = [];
+            try {
+              table_res = await __client.get({
+                filter: __filter,
+                callback: function (c) {
+                  let status = Math.trunc((c / self.count) * 100);
+                  self.loader.update({
+                    progress: status,
+                    progress_title: 'Сущности: ' + status + '%',
+                    request_count: Math.trunc((self.count - c) / 50)
+                  });
+                  return { cancel: self.cancel };
+                }
+              });
+            } catch (e) {
+              await timeout(1000);
+              self.loader.hide(self);
+              $(this).prop('disabled', false);
+              $(self.cancelButton).prop('disabled', false);
+              await self.updateData();
+              return;
+            }
             let serialize_table = self.entity.table(table_res);
             let result_table = serialize_table.map(e => ({
               id: e.id,
@@ -994,7 +1151,7 @@
             self.loader.hide(self);
             return self.table.show(self);
 
-            //костыль на слип для бутстраповского оффканваса
+            //костыль на слип для бутстраповского модального окна
             function timeout(ms) {
               return new Promise(resolve => setTimeout(resolve, ms));
             }
@@ -1015,7 +1172,7 @@
 
           $('.entity-type').text(this.entity.label);
           $('.entity-count').text(this.count);
-          $('.filter-button').prop('disabled', false);
+          $('.filter-button').prop('disabled', this.count < 1);
 
           this.fitWindow();
         },
@@ -1053,9 +1210,9 @@
 
           update: function (settings) {
             if (settings.title) $(this.html).find('.' + this.titleClass).text(settings.title);
-            if (settings.progress) $(this.html).find('.' + this.progressbarClass).css('width', settings.progress + '%')
+            if (settings.progress != null) $(this.html).find('.' + this.progressbarClass).css('width', settings.progress + '%')
             if (settings.progress_title) $(this.html).find('.' + this.progressbarTitleClass).text(settings.progress_title);
-            if (settings.request_count) this.updateApproximate(settings.request_count);
+            if (settings.request_count != null) this.updateApproximate(settings.request_count);
           },
           updateApproximate: function (c) {
             const timeot = 500, approximate = c * timeot;
