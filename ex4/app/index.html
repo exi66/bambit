@@ -785,6 +785,9 @@
             endDatePicker.selectDate(new Date(self.paddatepart(date[1]) + '-' + self.paddatepart(date[0]) + '-' + date[2]), { silent: false });
           }
         });
+        $('#air-datepicker-global-container').click(function (e) {
+          e.stopPropagation();
+        });
         return { start: startDatePicker, end: endDatePicker };
       },
       createNamePicker: function () {
