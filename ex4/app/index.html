@@ -49,7 +49,23 @@
     }
 
     .goto-page {
-      width: 2.7rem !important;
+      width: 3.5rem !important;
+    }
+
+    .goto-prev {
+      width: 3.5rem !important;
+    }
+
+    .goto-first {
+      width: 3.5rem !important;
+    }
+
+    .goto-next {
+      width: 3.5rem !important;
+    }
+
+    .goto-last {
+      width: 3.5rem !important;
     }
 
     .th-sort-table {
@@ -308,9 +324,9 @@
               <div class="crm-dedupe-wizard-start-control-box">
                 <div id="progressBar" class="crm-dedupe-wizard-status-bar">
                   <div class="progressbar progressbar-success progressbar-column">
+                    <div class="progressbar-status-percent">Поиск</div>
                     <div class="progressbar-text-after"></div>
                     <div class="progressbar-text-before"></div>
-                    <div class="progressbar-status-percent">Поиск</div>
                     <div class="progressbar-track">
                       <div class="progressbar-bar"></div>
                     </div>
@@ -396,12 +412,62 @@
         this.client = BX24Client;
         this.entityList;
       }
+      async getTest(settings) {
+        let count = await this.count(settings);
+        if (!count) return;
+        let __method = settings.method || this.methods.list.method,
+          id__wrapper = settings.id_wrapper || this.methods.list.id_wrapper,
+          __wrapper = settings.wrapper || this.methods.list.wrapper,
+          __filter = settings.filter || this.methods.list.filter,
+          __select = settings.select || this.methods.list.select,
+          __callback = settings.callback || function () { return { cancel: false } };
+        if (!__select.includes('ID')) __select.push('ID');
+        let last_id = __filter['>ID'] || 0, data = [];
+        while (count > 0) {
+          let local_filter = JSON.parse(JSON.stringify(__filter));
+          local_filter['>ID'] = last_id;
+          let local_count = Math.min(Math.ceil(count / 50), 50), calls = [{
+            method: __method,
+            params: {
+              order: settings.order || { 'ID': 'ASC' },
+              filter: local_filter,
+              select: __select,
+              start: -1,
+            }
+          }]
+          for (let i = 1; i < local_count; i++) {
+            let local_filter = JSON.parse(JSON.stringify(__filter));
+            local_filter['>ID'] = `$result[${i - 1}]${__wrapper ? '[' + __wrapper + ']' : ''}[49][${id__wrapper}]`;
+            calls[i] = {
+              method: __method,
+              params: {
+                order: settings.order || { 'ID': 'ASC' },
+                filter: local_filter,
+                select: __select,
+                start: -1,
+              }
+            }
+          }
+          let now = new Date().getTime();
+          let res = await BX24Client.callBatch(calls);
+          now = (new Date().getTime() - now) / 1000;
+          res.time = now;
+          for (let r of res) {
+            if (r.error()) throw 'Batch error!'
+            data = data.concat(__wrapper ? r.data()[__wrapper] : r.data());
+          }
+          if (__callback(res, data.length).cancel) throw 'Cancel';
+          last_id = data[data.length - 1][id__wrapper];
+          count -= 2500;
+        }
+        return data;
+      }
       async get(settings) {
         let __method = settings.method || this.methods.list.method,
           __wrapper = settings.wrapper || this.methods.list.wrapper,
           __filter = settings.filter || this.methods.list.filter,
           __select = settings.select || this.methods.list.select,
-          __callback = settings.callback || function () { };
+          __callback = settings.callback || function () { return { cancel: false } };
         if (!__filter || !__method) return;
         let res = await this.client.call(__method, {
           order: settings.order || { 'ID': 'ASC' },
@@ -436,7 +502,7 @@
         let local_entityList = JSON.parse(JSON.stringify(settings.entityList)),
           result = [],
           length = 50,
-          __callback = settings.callback || function () { };
+          __callback = settings.callback || function () { return { cancel: false } };
         while (local_entityList.length) result.push(local_entityList.splice(0, length));
         let cmds = [];
         for (let page of result) {
@@ -711,18 +777,18 @@
           if ($(this).val() == 0) startDatePicker.clear({ silent: false });
           else if (this.checkValidity()) {
             let date = $(this).val().split('.');
-            let d = Date.parse(self.paddatepart(date[1])+'-'+self.paddatepart(date[0])+'-'+date[2]);
+            let d = Date.parse(self.paddatepart(date[1]) + '-' + self.paddatepart(date[0]) + '-' + date[2]);
             if (isNaN(d)) return;
-            startDatePicker.selectDate(new Date(self.paddatepart(date[1])+'-'+self.paddatepart(date[0])+'-'+date[2]), { silent: false });
+            startDatePicker.selectDate(new Date(self.paddatepart(date[1]) + '-' + self.paddatepart(date[0]) + '-' + date[2]), { silent: false });
           }
         });
         $(parent).find('input[name="end_date"]').change(function (e) {
           if ($(this).val() == 0) endDatePicker.clear({ silent: false });
           else if (this.checkValidity()) {
             let date = $(this).val().split('.');
-            let d = Date.parse(self.paddatepart(date[1])+'-'+self.paddatepart(date[0])+'-'+date[2]);
+            let d = Date.parse(self.paddatepart(date[1]) + '-' + self.paddatepart(date[0]) + '-' + date[2]);
             if (isNaN(d)) return;
-            endDatePicker.selectDate(new Date(self.paddatepart(date[1])+'-'+self.paddatepart(date[0])+'-'+date[2]), { silent: false });
+            endDatePicker.selectDate(new Date(self.paddatepart(date[1]) + '-' + self.paddatepart(date[0]) + '-' + date[2]), { silent: false });
           }
         });
         return { start: startDatePicker, end: endDatePicker };
@@ -803,6 +869,7 @@
             list: {
               select: ['ID', 'DATE_CREATE', 'ASSIGNED_BY_ID', 'TITLE'],
               method: 'crm.lead.list',
+              id_wrapper: 'ID',
             },
             delete: {
               method: 'crm.lead.delete',
@@ -835,6 +902,7 @@
             list: {
               select: ['ID', 'DATE_CREATE', 'ASSIGNED_BY_ID', 'TITLE'],
               method: 'crm.company.list',
+              id_wrapper: 'ID',
             },
             delete: {
               method: 'crm.company.delete',
@@ -867,6 +935,7 @@
               select: ['ID', 'CREATED_DATE', 'RESPONSIBLE_ID', 'TITLE'],
               method: 'tasks.task.list',
               wrapper: 'tasks',
+              id_wrapper: 'id',
             },
             delete: {
               method: 'tasks.task.delete',
@@ -945,6 +1014,7 @@
         filterCardsClass: 'filter-card',
 
         init: async function () {
+
           const self = this;
 
           this.bs.init();
@@ -1055,7 +1125,7 @@
               let __filter = self.entity.serialize(self.query), __client = self.entity.new(), table_res = [];
 
               try {
-                table_res = await __client.get({
+                table_res = await __client.getTest({
                   filter: __filter,
                   select: ['ID'],
                   callback: function (res, c) {
@@ -1063,8 +1133,8 @@
                       progress: Math.trunc((c / self.count) * 100),
                       progress_title: c + ' / ' + self.count,
                       approximate: {
-                        time: res.answer.time.duration,
-                        count: Math.trunc((self.count - c) / 50)
+                        time: res.time,
+                        count: Math.trunc((self.count - c) / 2500)
                       },
                     });
                     return { cancel: self.cancel };
@@ -1188,15 +1258,15 @@
 
             let __filter = self.entity.serialize(self.query), __client = self.entity.new(), table_res = [];
             try {
-              table_res = await __client.get({
+              table_res = await __client.getTest({
                 filter: __filter,
                 callback: function (res, c) {
                   self.loader.update({
                     progress: Math.trunc((c / self.count) * 100),
                     progress_title: c + ' / ' + self.count,
                     approximate: {
-                      time: res.answer.time.duration,
-                      count: Math.trunc((self.count - c) / 50)
+                      time: res.time,
+                      count: Math.trunc((self.count - c) / 2500)
                     },
                   });
                   return { cancel: self.cancel };
@@ -1219,7 +1289,6 @@
               user: serialize_users.find(u => u.id === e.user) || { name: 'Не найден', id: -1, photo: './img/unknow-user.svg' },
               path: self.entity.path,
             }));
-
             self.table.init(result_table, self);
 
             await timeout(1000);
@@ -1346,6 +1415,7 @@
             let local_table = JSON.parse(JSON.stringify(__table)), result = [], length = this.page_size;
             while (local_table.length) result.push(local_table.splice(0, length));
             this.pages_data = result;
+            $('.' + this.paginationWrapperClass).empty();
             if (result.length > 1) this.createPagination(parent);
             this.createTable(parent);
             this.expired = false;
@@ -1362,14 +1432,14 @@
             for (let t of this.pages_data[this.page]) {
               $(this.html).find('tbody').append(`
                 <tr>
-                  <th scope="row">${t.id}</th>
-                  <td class="${this.openPathClass} link-primary text-truncate" data-path="${t.path + t.id}/">${t.title}</td>
-                  <td class="${t.user.id !== -1 ? this.openPathClass + ' link-primary ' : ''} text-truncate" ${t.user.id !== -1 ? `data-path="/company/personal/user/${t.user.id}/"` : ''}>
+                  <th scope="row" style="max-width: 6rem">${t.id}</th>
+                  <td style="max-width: 16rem" class="${this.openPathClass} link-primary text-truncate" data-path="${t.path + t.id}/">${t.title}</td>
+                  <td style="max-width: 8rem" class="${t.user.id !== -1 ? this.openPathClass + ' link-primary ' : ''} text-truncate" ${t.user.id !== -1 ? `data-path="/company/personal/user/${t.user.id}/"` : ''}>
                     <img class="${this.userAvatarClass} rounded-circle" src="${t.user.photo}" alt="user avatar">
                     ${t.user.name}
                   </td>
-                  <td class="text-truncate">${new Date(t.created).toLocaleDateString('ru-RU')}</td>
-                  <th style="width: 7rem" class="text-center ${this.buttonsWrapperClass}">
+                  <td style="max-width: 8rem" class="text-truncate">${new Date(t.created).toLocaleDateString('ru-RU')}</td>
+                  <th style="max-width: 10%" class="text-center ${this.buttonsWrapperClass}">
                     <button type="button" class="btn btn-danger btn-sm ${this.deleteButtonClass}" data-id="${t.id}">Удалить</button>
                   </th>
                 </tr>`);
