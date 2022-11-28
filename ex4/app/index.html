@@ -275,7 +275,7 @@
               <h3 class="card-title">Тип: <span class="entity-type">Лид</span></h3>
               <div class="row my-1">
                 <div class="col my-auto">
-                  <p class="card-text">Найдено сущностей: <span class="entity-count">0</span></p>
+                  <p class="card-text">Найдено: <span class="entity-count">0</span></p>
                 </div>
                 <div class="col-auto ms-auto">
                   <button id="show-table" class="btn btn-primary filter-button" disabled>Посмотреть</button>
@@ -349,7 +349,6 @@
       </div>
       <div class="offcanvas-body">
         <p class="fw-bold">
-          Тип: <span class="entity-type">Лид</span><br>
           Найдено: <span class="entity-count">0</span>
         </p>
         <div class="pagination-wrapper"></div>
@@ -449,7 +448,7 @@
             }
           }
           let now = new Date().getTime();
-          let res = await BX24Client.callBatch(calls);
+          let res = await this.client.callBatch(calls);
           now = (new Date().getTime() - now) / 1000;
           res.time = now;
           for (let r of res) {
@@ -513,7 +512,10 @@
         }
         let count = 0;
         for (let i = 0; i < cmds.length; i++) {
+          let now = new Date().getTime();
           let res = await this.client.callBatch(cmds[i]);
+          now = (new Date().getTime() - now) / 1000;
+          res.time = now;
           count += res.length;
           if (__callback(res, count).cancel) throw 'Cancel';
         }
@@ -1134,7 +1136,7 @@
                       progress_title: c + ' / ' + self.count,
                       approximate: {
                         time: res.time,
-                        count: Math.trunc((self.count - c) / 2500)
+                        count: Math.ceil((self.count - c) / 2500)
                       },
                     });
                     return { cancel: self.cancel };
@@ -1157,15 +1159,15 @@
                 progress_title: '0 / ' + self.count
               });
               try {
-                await __client.deleteAll({
+                let res = await __client.deleteAll({
                   entityList: serialize_table,
                   callback: function (res, c) {
                     self.loader.update({
                       progress: Math.trunc((c / self.count) * 100),
                       progress_title: c + ' / ' + self.count,
                       approximate: {
-                        time: res.answer.time.duration,
-                        count: Math.trunc((self.count - c) / 50)
+                        time: res.time,
+                        count: Math.ceil((self.count - c) / 50)
                       },
                     });
                     return { cancel: self.cancel };
@@ -1192,15 +1194,15 @@
 
               let __client = self.entity.new();
               try {
-                await __client.deleteAll({
+                let res = await __client.deleteAll({
                   entityList: self.table.data,
                   callback: function (res, c) {
                     self.loader.update({
                       progress: Math.trunc((c / self.count) * 100),
                       progress_title: c + ' / ' + self.count,
                       approximate: {
-                        time: res.answer.time.duration,
-                        count: Math.trunc((self.count - c) / 50)
+                        time: res.time,
+                        count: Math.ceil((self.count - c) / 50)
                       },
                     });
                     return { cancel: self.cancel };
@@ -1266,14 +1268,13 @@
                     progress_title: c + ' / ' + self.count,
                     approximate: {
                       time: res.time,
-                      count: Math.trunc((self.count - c) / 2500)
+                      count: Math.ceil((self.count - c) / 2500)
                     },
                   });
                   return { cancel: self.cancel };
                 }
               });
             } catch (e) {
-              console.log(e);
               await timeout(1000);
               self.loader.hide(self);
               $(this).prop('disabled', false);
@@ -1321,7 +1322,7 @@
           this.count = await __client.count({ filter: __filter });
 
           $('.entity-type').text(this.entity.label);
-          $('.entity-count').text(this.count);
+          $('.entity-count').text(`${this.count} ${this.declOfNum(this.count, this.entity.labels)}`);
           $('.filter-button').prop('disabled', this.count < 1);
         },
         dialog: async function (text) { //тут надо тоже вынести классы
