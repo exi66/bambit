@@ -659,11 +659,11 @@
           <div class="row">
             <div class="col-6">
               <label class="form-label text-start mx-2" for="start_date">Начальная: </label>
-              <input type="text" name="start_date" class="filter-input form-control" readonly>
+              <input type="text" name="start_date" class="filter-input form-control" pattern="[0-9]{1,2}.[0-9]{1,2}.[0-9]{4}">
             </div>
             <div class="col-6">
               <label class="form-label text-start mx-2" for="end_date">Конечная: </label>
-              <input type="text" name="end_date" class="filter-input form-control" readonly>
+              <input type="text" name="end_date" class="filter-input form-control" pattern="[0-9]{1,2}.[0-9]{1,2}.[0-9]{4}">
             </div>
           </div>
         </label>`);
@@ -709,9 +709,21 @@
         });
         $(parent).find('input[name="start_date"]').change(function (e) {
           if ($(this).val() == 0) startDatePicker.clear({ silent: false });
+          else if (this.checkValidity()) {
+            let date = $(this).val().split('.');
+            let d = Date.parse(self.paddatepart(date[1])+'-'+self.paddatepart(date[0])+'-'+date[2]);
+            if (isNaN(d)) return;
+            startDatePicker.selectDate(new Date(self.paddatepart(date[1])+'-'+self.paddatepart(date[0])+'-'+date[2]), { silent: false });
+          }
         });
         $(parent).find('input[name="end_date"]').change(function (e) {
           if ($(this).val() == 0) endDatePicker.clear({ silent: false });
+          else if (this.checkValidity()) {
+            let date = $(this).val().split('.');
+            let d = Date.parse(self.paddatepart(date[1])+'-'+self.paddatepart(date[0])+'-'+date[2]);
+            if (isNaN(d)) return;
+            endDatePicker.selectDate(new Date(self.paddatepart(date[1])+'-'+self.paddatepart(date[0])+'-'+date[2]), { silent: false });
+          }
         });
         return { start: startDatePicker, end: endDatePicker };
       },
@@ -770,7 +782,7 @@
             `${$(e.target).val().length} ${self.declOfNum($(e.target).val().length, settings.titles)}` : null;
           self.callback({
             parent: parent,
-            name: 'status',
+            name: settings.name,
             value: value,
             label: `${settings.label}:`,
           });
