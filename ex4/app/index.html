@@ -37,15 +37,7 @@
     }
 
     .page-link:disabled {
-      background-color: rgba(239, 239, 239, 0.3);
-      color: rgba(46, 46, 46, 0.3);
-      border-color: rgba(195, 195, 195, 0.3);
-    }
-
-    .page-link:disabled:hover {
-      background-color: rgba(239, 239, 239, 0.3);
-      color: rgba(46, 46, 46, 0.3);
-      border-color: rgba(195, 195, 195, 0.3);
+      opacity: 0%;
     }
 
     .goto-page {
@@ -1109,7 +1101,7 @@
 
           $(this.deleteAll).click(async function () {
             if (!self.query || !self.count) return;
-            const flag = await self.dialog(`Вы действительно хотите удалить ${self.count} сущ. типа ${self.entity.label}?`);
+            const flag = await self.dialog(`Вы действительно хотите удалить ${self.count} ${self.declOfNum(self.count, self.entity.labels)}?`);
             if (!flag) return;
             $(this).prop('disabled', true);
             self.cancel = false;
@@ -1447,7 +1439,7 @@
             }
             $('.' + this.deleteButtonClass).click(async function () {
               $(this).prop('disabled', true);
-              const id = parseInt($(this).attr('data-id')), flag = await parent.dialog('Вы действительно хотите удалить сущность с id: ' + id + '?');
+              const id = parseInt($(this).attr('data-id')), flag = await parent.dialog(`Вы действительно хотите удалить ${parent.declOfNum(1, parent.entity.labels)} с id: ${id} ?`);
               if (!flag) return $(this).prop('disabled', false);
               $(this).html(`<div class="spinner-border spinner-border-sm" role="status">
                   <span class="visually-hidden">Удаление...</span>
