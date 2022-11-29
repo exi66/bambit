@@ -48,6 +48,28 @@
       box-shadow: 0 0 0 0.25rem rgb(47 198 246 / 25%);
     }
 
+    .btn-close {
+      color: white;
+      font-size: 1rem;
+      background: transparent url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3e%3cpath fill='%23FFF' fill-rule='evenodd' d='M11.381 1.746L7.138 5.988l4.248 4.249-1.151 1.152L5.986 7.14l-4.242 4.244-1.147-1.146L4.84 5.994.592 1.747 1.744.595l4.248 4.247L10.235.6z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+      border: 2px solid;
+      border-color: var(--bs-primary);
+      opacity: 1;
+    }
+
+    .btn-close:focus {
+      border-color: rgba(255, 255, 255, .5);
+      border-radius: 1rem;
+      box-shadow: none;
+      opacity: 1;
+    }
+
+    .btn-close:hover {
+      border-color: rgba(255, 255, 255, .5);
+      border-radius: 1rem;
+      opacity: 1;
+    }
+
     .select2-container--default.select2-container--focus .select2-selection--multiple {
       border-color: var(--bs-primary);
       box-shadow: 0 0 0 0.25rem rgb(47 198 246 / 25%);
@@ -395,8 +417,10 @@
     </div>
     <div class="offcanvas offcanvas-end w-75 border-0 my-3" tabindex="-1" id="filter-offcanvas"
       aria-labelledby="slider-title">
+      <div class="position-absolute p-1" style="translate: -100% 50%; background-color: var(--bs-primary); border-radius: 1rem 0 0 1rem;">
+        <button type="button" class="btn-close btn-primary" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
       <div class="offcanvas-header justify-content-start">
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         <h3 id="slider-title" class="my-auto ms-3">Результаты поиска</h3>
       </div>
       <div class="offcanvas-body">
