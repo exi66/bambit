@@ -105,6 +105,11 @@
       border-color: var(--bs-primary);
     }
 
+    .active>.page-link,
+    .page-link.active:hover {
+      color: white;
+    }
+
     button:disabled {
       opacity: 50%;
     }
@@ -317,7 +322,7 @@
 <body>
   <main id="app" class="container-fluid">
     <div class="row d-flex justify-content-center">
-      <div class="col-5 row">
+      <div class="col-8 col-lg-6 row">
         <div class="col-12">
           <h1>Удаление записей</h1>
         </div>
@@ -1560,7 +1565,7 @@
           page: 0,
           page_size: 50,
           expired: true,
-          step_size: 4,
+          step_size: 3,
 
           buttonsWrapperClass: 'actions-wrapper',
           deleteButtonClass: 'delete-obj',
