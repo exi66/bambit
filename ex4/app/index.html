@@ -10,7 +10,7 @@
   <script src="https://dev.bambit.ru/burul/resources/js/jquery-3.6.1.min.js"></script>
   <script src="https://dev.bambit.ru/burul/resources/js/bx-24-wrapper.js"></script>
   <script src="https://dev.bambit.ru/burul/resources/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="./js/select2.min.js"></script>
+  <script src="./js/select2.min.js?v1"></script>
   <script src="./js/air-datepicker.min.js"></script>
 
   <link rel="stylesheet" href="./css/select2.min.css">
@@ -271,7 +271,7 @@
           </div>
           <div class="position-relative m-0 p-0">
             <div class="dropdown-menu w-100" style="z-index: 50;" id="filter-menu" aria-labelledby="filter">
-              <form class="p-4 w-100" id="filter-form" data-target="#filter"></form>
+              <form class="py-2 px-5 w-100" id="filter-form" data-target="#filter"></form>
             </div>
           </div>
         </div>
@@ -733,6 +733,7 @@
         });
 
         $(parent + ' .filter-input').change(function (e) {
+          if (!this.checkValidity()) return this.reportValidity();
           let label = $(parent + ' label[for="' + $(e.target).attr('name') + '"]').text();
           self.callback({
             parent: parent,
@@ -801,22 +802,20 @@
           }
         });
         $(parent).find('input[name="start_date"]').change(function (e) {
-          if ($(this).val() == 0) startDatePicker.clear({ silent: false });
-          else if (this.checkValidity()) {
-            let date = $(this).val().split('.');
-            let d = Date.parse(self.paddatepart(date[1]) + '-' + self.paddatepart(date[0]) + '-' + date[2]);
-            if (isNaN(d)) return;
-            startDatePicker.selectDate(new Date(self.paddatepart(date[1]) + '-' + self.paddatepart(date[0]) + '-' + date[2]), { silent: false });
-          }
+          if ($(this).val() == 0) return startDatePicker.clear({ silent: false });
+          if (!this.checkValidity()) return this.reportValidity();
+          let date = $(this).val().split('.');
+          let d = Date.parse(self.paddatepart(date[1]) + '-' + self.paddatepart(date[0]) + '-' + date[2]);
+          if (isNaN(d)) return;
+          startDatePicker.selectDate(new Date(self.paddatepart(date[1]) + '-' + self.paddatepart(date[0]) + '-' + date[2]), { silent: false });
         });
         $(parent).find('input[name="end_date"]').change(function (e) {
-          if ($(this).val() == 0) endDatePicker.clear({ silent: false });
-          else if (this.checkValidity()) {
-            let date = $(this).val().split('.');
-            let d = Date.parse(self.paddatepart(date[1]) + '-' + self.paddatepart(date[0]) + '-' + date[2]);
-            if (isNaN(d)) return;
-            endDatePicker.selectDate(new Date(self.paddatepart(date[1]) + '-' + self.paddatepart(date[0]) + '-' + date[2]), { silent: false });
-          }
+          if ($(this).val() == 0) return endDatePicker.clear({ silent: false });
+          if (!this.checkValidity()) return this.reportValidity();
+          let date = $(this).val().split('.');
+          let d = Date.parse(self.paddatepart(date[1]) + '-' + self.paddatepart(date[0]) + '-' + date[2]);
+          if (isNaN(d)) return;
+          endDatePicker.selectDate(new Date(self.paddatepart(date[1]) + '-' + self.paddatepart(date[0]) + '-' + date[2]), { silent: false });
         });
         $('#air-datepicker-global-container').click(function (e) {
           e.stopPropagation();
