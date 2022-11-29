@@ -1601,8 +1601,7 @@
                   <th scope="row" style="max-width: 6rem">${t.id}</th>
                   <td style="max-width: 16rem" class="${this.openPathClass} link-primary text-truncate" data-path="${t.path + t.id}/">${t.title}</td>
                   <td style="max-width: 8rem" class="${t.user.id !== -1 ? this.openPathClass + ' link-primary ' : ''} text-truncate" ${t.user.id !== -1 ? `data-path="/company/personal/user/${t.user.id}/"` : ''}>
-                    <img class="${this.userAvatarClass} rounded-circle" src="${t.user.photo}" alt="user avatar">
-                    ${t.user.name}
+                    <img class="${this.userAvatarClass} rounded-circle me-1" src="${t.user.photo}" alt="user avatar">${t.user.name}
                   </td>
                   <td style="max-width: 8rem" class="text-truncate">${new Date(t.created).toLocaleDateString('ru-RU')}</td>
                   <th style="max-width: 10%" class="text-center ${this.buttonsWrapperClass}">
