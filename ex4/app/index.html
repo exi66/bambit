@@ -402,6 +402,11 @@
         this.methods = methods;
         this.client = BX24Client;
         this.entityList;
+        this.operationTimeout = 450;
+        this.timeoutDuration = 120 * 1000;
+      }
+      timeout(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
       }
       async getTest(settings) {
         let count = await this.count(settings);
@@ -411,9 +416,10 @@
           __wrapper = settings.wrapper || this.methods.list.wrapper,
           __filter = settings.filter || this.methods.list.filter,
           __select = settings.select || this.methods.list.select,
-          __callback = settings.callback || function () { return { cancel: false } };
+          __callback = settings.callback || function () { return { cancel: false } },
+          __timeout = settings.timeout || function () { };
         if (!__select.includes('ID')) __select.push('ID');
-        let last_id = __filter['>ID'] || 0, data = [];
+        let last_id = __filter['>ID'] || 0, data = [], duration = 0;
         while (count > 0) {
           let local_filter = JSON.parse(JSON.stringify(__filter));
           local_filter['>ID'] = last_id;
@@ -443,11 +449,17 @@
           let res = await this.client.callBatch(calls);
           now = (new Date().getTime() - now) / 1000;
           res.time = now;
+          duration += now;
           for (let r of res) {
             if (r.error()) throw 'Batch error!'
             data = data.concat(__wrapper ? r.data()[__wrapper] : r.data());
           }
           if (__callback(res, data.length).cancel) throw 'Cancel';
+          if (duration >= this.operationTimeout) {
+            __timeout(res, data.length);
+            await this.timeout(this.timeoutDuration);
+            duration = 0;
+          }
           last_id = data[data.length - 1][id__wrapper];
           count -= 2500;
         }
@@ -502,14 +514,20 @@
             params: { [this.methods.delete.param]: e.id }
           })));
         }
-        let count = 0;
+        let count = 0, duration = 0;
         for (let i = 0; i < cmds.length; i++) {
           let now = new Date().getTime();
           let res = await this.client.callBatch(cmds[i]);
           now = (new Date().getTime() - now) / 1000;
           res.time = now;
+          duration += now;
           count += res.length;
           if (__callback(res, count).cancel) throw 'Cancel';
+          if (duration >= this.operationTimeout) {
+            __timeout(res, data.length);
+            await this.timeout(this.timeoutDuration);
+            duration = 0;
+          }
         }
       }
       async delete(settings) {
@@ -521,6 +539,7 @@
         if (res.error()) throw 'Request error: ' + res.error();
         return res.data();
       }
+
     }
     //пример использования
     // async function () {
@@ -1108,6 +1127,7 @@
             if (!flag) return;
             $(this).prop('disabled', true);
             self.cancel = false;
+            const duration_timeout = 400;
             if (self.table.expired) {
 
               self.loader.update({
@@ -1122,6 +1142,7 @@
               let __filter = self.entity.serialize(self.query), __client = self.entity.new(), table_res = [];
 
               try {
+                let duration = 0;
                 table_res = await __client.getTest({
                   filter: __filter,
                   select: ['ID'],
@@ -1135,9 +1156,20 @@
                       },
                     });
                     return { cancel: self.cancel };
+                  },
+                  timeout: function (res, c) {
+                    self.loader.update({
+                      progress_title: 'Техническая пауза...',
+                      approximate: {
+                        time: res.time,
+                        count: Math.ceil((self.count - c) / 2500),
+                        timeout: 120,
+                      },
+                    });
                   }
                 });
               } catch (e) {
+                if (e !== 'Cancel') return console.error(e);
                 await timeout(1000);
                 self.loader.hide(self);
                 $(this).prop('disabled', false);
@@ -1154,7 +1186,8 @@
                 progress_title: '0 / ' + self.count
               });
               try {
-                let res = await __client.deleteAll({
+                let duration = 0;
+                await __client.deleteAll({
                   entityList: serialize_table,
                   callback: function (res, c) {
                     self.loader.update({
@@ -1166,10 +1199,20 @@
                       },
                     });
                     return { cancel: self.cancel };
-                    //console.log(res);
+                  },
+                  timeout: function (res, c) {
+                    self.loader.update({
+                      progress_title: 'Техническая пауза...',
+                      approximate: {
+                        time: res.time,
+                        count: Math.ceil((self.count - c) / 2500),
+                        timeout: 120,
+                      },
+                    });
                   }
                 });
               } catch (e) {
+                if (e !== 'Cancel') return console.error(e);
                 await timeout(1000);
                 self.loader.hide(self);
                 $(this).prop('disabled', false);
@@ -1189,7 +1232,8 @@
 
               let __client = self.entity.new();
               try {
-                let res = await __client.deleteAll({
+                let duration = 0;
+                await __client.deleteAll({
                   entityList: self.table.data,
                   callback: function (res, c) {
                     self.loader.update({
@@ -1201,11 +1245,21 @@
                       },
                     });
                     return { cancel: self.cancel };
-                    //console.log(res);
+                  },
+                  timeout: function (res, c) {
+                    self.loader.update({
+                      progress_title: 'Техническая пауза...',
+                      approximate: {
+                        time: res.time,
+                        count: Math.ceil((self.count - c) / 2500),
+                        timeout: 120,
+                      },
+                    });
                   }
                 });
               }
               catch (e) {
+                if (e !== 'Cancel') return console.error(e);
                 await timeout(1000);
                 self.loader.hide(self);
                 $(this).prop('disabled', false);
@@ -1242,6 +1296,7 @@
 
             $(this).prop('disabled', true);
             self.cancel = false;
+            const duration_timeout = 400;
 
             let serialize_users = self.users;
 
@@ -1255,6 +1310,7 @@
 
             let __filter = self.entity.serialize(self.query), __client = self.entity.new(), table_res = [];
             try {
+              let duration = 0;
               table_res = await __client.getTest({
                 filter: __filter,
                 callback: function (res, c) {
@@ -1267,9 +1323,20 @@
                     },
                   });
                   return { cancel: self.cancel };
+                },
+                timeout: function (res, c) {
+                  self.loader.update({
+                    progress_title: 'Техническая пауза...',
+                    approximate: {
+                      time: res.time,
+                      count: Math.ceil((self.count - c) / 2500),
+                      timeout: 120,
+                    },
+                  });
                 }
               });
             } catch (e) {
+              if (e !== 'Cancel') return console.error(e);
               await timeout(1000);
               self.loader.hide(self);
               $(this).prop('disabled', false);
@@ -1359,7 +1426,7 @@
             if (settings.approximate) this.updateApproximate(settings.approximate);
           },
           updateApproximate: function (settings) {
-            const approximate = Math.max(settings.time, 0.5) * settings.count;
+            const approximate = Math.max(settings.time, 0.5) * settings.count + (settings.timeout || 0);
             let minutes = Math.floor(approximate / 60);
             let seconds = (approximate % 60).toFixed(0);
             $(this.html).find('.' + this.approximateClass).text(`Осталось: ~ ${Math.trunc(minutes)} мин. ${Math.trunc(seconds)} сек.`);
