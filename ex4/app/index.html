@@ -416,7 +416,7 @@
           __wrapper = settings.wrapper || this.methods.list.wrapper,
           __filter = settings.filter || this.methods.list.filter,
           __select = settings.select || this.methods.list.select,
-          __callback = settings.callback || function () { return { cancel: false } },
+          __callback = settings.callback || function () { return false; },
           __timeout = settings.timeout || function () { };
         if (!__select.includes('ID')) __select.push('ID');
         let last_id = __filter['>ID'] || 0, data = [], duration = 0;
@@ -454,7 +454,7 @@
             if (r.error()) throw 'Batch error!'
             data = data.concat(__wrapper ? r.data()[__wrapper] : r.data());
           }
-          if (__callback(res, data.length).cancel) throw 'Cancel';
+          if (__callback(res, data.length)) throw 'Cancel';
           if (duration >= this.operationTimeout) {
             __timeout(res, data.length);
             await this.timeout(this.timeoutDuration);
@@ -470,7 +470,7 @@
           __wrapper = settings.wrapper || this.methods.list.wrapper,
           __filter = settings.filter || this.methods.list.filter,
           __select = settings.select || this.methods.list.select,
-          __callback = settings.callback || function () { return { cancel: false } };
+          __callback = settings.callback || function () { return false; };
         if (!__filter || !__method) return;
         let res = await this.client.call(__method, {
           order: settings.order || { 'ID': 'ASC' },
@@ -480,12 +480,12 @@
         });
         if (res.error()) throw 'Request error: ' + res.error();
         let local_entityList = __wrapper ? res.data()[__wrapper] : res.data();
-        if (__callback(res, local_entityList.length).cancel) throw 'Cancel';
+        if (__callback(res, local_entityList.length)) throw 'Cancel';
         while (res.more()) {
           res = await this.client.next(res);
           if (res.error()) throw 'Request error: ' + res.error();
           local_entityList = local_entityList.concat(__wrapper ? res.data()[__wrapper] : res.data());
-          if (__callback(res, local_entityList.length).cancel) throw 'Cancel';
+          if (__callback(res, local_entityList.length)) throw 'Cancel';
         }
         return this.entityList = local_entityList;
       }
@@ -505,7 +505,7 @@
         let local_entityList = JSON.parse(JSON.stringify(settings.entityList)),
           result = [],
           length = 50,
-          __callback = settings.callback || function () { return { cancel: false } };
+          __callback = settings.callback || function () { return false; };
         while (local_entityList.length) result.push(local_entityList.splice(0, length));
         let cmds = [];
         for (let page of result) {
@@ -522,7 +522,7 @@
           res.time = now;
           duration += now;
           count += res.length;
-          if (__callback(res, count).cancel) throw 'Cancel';
+          if (__callback(res, count)) throw 'Cancel';
           if (duration >= this.operationTimeout) {
             __timeout(res, data.length);
             await this.timeout(this.timeoutDuration);
@@ -1147,6 +1147,7 @@
                   filter: __filter,
                   select: ['ID'],
                   callback: function (res, c) {
+                    if (self.cancel) return true;
                     self.loader.update({
                       progress: Math.trunc((c / self.count) * 100),
                       progress_title: c + ' / ' + self.count,
@@ -1155,7 +1156,6 @@
                         count: Math.ceil((self.count - c) / 2500)
                       },
                     });
-                    return { cancel: self.cancel };
                   },
                   timeout: function (res, c) {
                     self.loader.update({
@@ -1190,6 +1190,7 @@
                 await __client.deleteAll({
                   entityList: serialize_table,
                   callback: function (res, c) {
+                    if (self.cancel) return true;
                     self.loader.update({
                       progress: Math.trunc((c / self.count) * 100),
                       progress_title: c + ' / ' + self.count,
@@ -1198,7 +1199,6 @@
                         count: Math.ceil((self.count - c) / 50)
                       },
                     });
-                    return { cancel: self.cancel };
                   },
                   timeout: function (res, c) {
                     self.loader.update({
@@ -1236,6 +1236,7 @@
                 await __client.deleteAll({
                   entityList: self.table.data,
                   callback: function (res, c) {
+                    if (self.cancel) return true;
                     self.loader.update({
                       progress: Math.trunc((c / self.count) * 100),
                       progress_title: c + ' / ' + self.count,
@@ -1244,7 +1245,6 @@
                         count: Math.ceil((self.count - c) / 50)
                       },
                     });
-                    return { cancel: self.cancel };
                   },
                   timeout: function (res, c) {
                     self.loader.update({
@@ -1314,6 +1314,7 @@
               table_res = await __client.getTest({
                 filter: __filter,
                 callback: function (res, c) {
+                  if (self.cancel) return true;
                   self.loader.update({
                     progress: Math.trunc((c / self.count) * 100),
                     progress_title: c + ' / ' + self.count,
@@ -1322,7 +1323,6 @@
                       count: Math.ceil((self.count - c) / 2500)
                     },
                   });
-                  return { cancel: self.cancel };
                 },
                 timeout: function (res, c) {
                   self.loader.update({
