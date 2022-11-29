@@ -317,11 +317,11 @@
                 <div id="progressBar" class="crm-dedupe-wizard-status-bar">
                   <div class="progressbar progressbar-success progressbar-column">
                     <div class="progressbar-status-percent">Поиск</div>
-                    <div class="progressbar-text-after"></div>
-                    <div class="progressbar-text-before"></div>
                     <div class="progressbar-track">
                       <div class="progressbar-bar"></div>
                     </div>
+                    <div class="progressbar-text-before">Прошло: 0 мин. 0 сек.</div>
+                    <div class="progressbar-text-after">Осталось: ~ 0 мин. 0 сек.</div>
                   </div>
                 </div>
               </div>
@@ -1413,11 +1413,13 @@
         },
         loader: {
           html: '#loader',
+          timer: {},
 
           titleClass: 'modal-title',
           progressbarClass: 'progressbar-bar',
           progressbarTitleClass: 'progressbar-status-percent',
           approximateClass: 'progressbar-text-after',
+          timerClass: 'progressbar-text-before',
 
           update: function (settings) {
             if (settings.title) $(this.html).find('.' + this.titleClass).text(settings.title);
@@ -1429,13 +1431,23 @@
             const approximate = Math.max(settings.time, 0.5) * settings.count + (settings.timeout || 0);
             let minutes = Math.floor(approximate / 60);
             let seconds = (approximate % 60).toFixed(0);
-            $(this.html).find('.' + this.approximateClass).text(`Осталось: ~ ${Math.trunc(minutes)} мин. ${Math.trunc(seconds)} сек.`);
+            $(this.html).find('.' + this.approximateClass).text(`Осталось: ~ ${minutes} мин. ${seconds} сек.`);
           },
           show: function (parent) {
+            const self = this;
             parent.bs.loaderModal.show();
+            let tick = 1;
+            this.timer = setInterval(function () {
+              let minutes = Math.floor(tick / 60);
+              let seconds = (tick % 60).toFixed(0);
+              $(self.html).find('.' + self.timerClass).text(`Прошло: ${minutes} мин. ${seconds} сек.`);
+              tick++;
+            }, 1000);
           },
           hide: function (parent) {
             parent.bs.loaderModal.hide();
+            clearInterval(this.timer);
+            $(this.html).find('.' + this.timerClass).text(`Прошло: 0 мин. 0 сек.`);
           },
         },
         bs: {
