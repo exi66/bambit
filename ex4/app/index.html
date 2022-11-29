@@ -22,6 +22,20 @@
       min-height: 3.25rem;
     }
 
+    .filter-focus {
+      border-color: #86b7fe;
+      box-shadow: 0 0 0 0.25rem rgb(13 110 253 / 25%);
+    }
+
+    .select2-container--default.select2-container--focus .select2-selection--multiple {
+      border-color: #86b7fe;
+      box-shadow: 0 0 0 0.25rem rgb(13 110 253 / 25%);
+    }
+
+    .select2-container--default .select2-selection--multiple {
+      border: 1px solid #ced4da;
+    }
+
     .select2-selection__choice__remove {
       float: right;
       margin-right: 0.25rem !important;
@@ -1460,6 +1474,14 @@
             this.tableOffcanvas = new bootstrap.Offcanvas(document.getElementById('filter-offcanvas'));
             this.confirmModal = new bootstrap.Modal(document.getElementById('confirm'));
             this.loaderModal = new bootstrap.Modal(document.getElementById('loader'));
+
+            document.getElementById('filter').addEventListener('shown.bs.dropdown', function () {
+              $(this).addClass('filter-focus');
+            });
+
+            document.getElementById('filter').addEventListener('hidden.bs.dropdown', function () {
+              $(this).removeClass('filter-focus');
+            });
           }
         },
         table: {
