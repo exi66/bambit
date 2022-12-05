@@ -1,5 +1,5 @@
 <?php
-require_once(__DIR__ . '/../src/crest.php');
+require_once(dirname(__DIR__) . '/src/crest.php');
 
 $phoneNumber = '+79181234567';
 
