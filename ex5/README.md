@@ -8,6 +8,5 @@
 "https://dev.1c-bitrix.ru/rest_help/crm/auxiliary/duplicates/crm_duplicate_findbycomm.php";  
 "https://dev.1c-bitrix.ru/rest_help/crm/cases/edit/how_to_change_email_or_phone.php";
 
-## Запуск
-В проекте используется одна зависимость [phpdotenv](https://github.com/vlucas/phpdotenv).  
-Перед запуском необходимо установить `composer install` и создать `.env` файл в корне, со структурой, аналогичной `.env-example`.  
+## Запуск 
+Перед запуском необходимо создать `/src/settings.php`, со структурой, аналогичной `/src/settings.php.example`.  
