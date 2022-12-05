@@ -1,0 +1,12 @@
+{
+    "name": "exi/app",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Exi\\App\\": "src/"
+        }
+    },
+    "require": {
+        "vlucas/phpdotenv": "^5.5"
+    }
+}
